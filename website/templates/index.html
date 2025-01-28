@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <!-- by bertramrq: https://www.youtube.com/@BertramRQ -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <span class="logo">YouTube Downloader</span>
+        <div class="nav-buttons">
+            <button type="button" id="remove-files">remove files</button>
+            <!-- <button>About</button>
+            <button>Services</button>
+            <button>Contact</button>
+            <button>Blog</button> -->
+        </div>
+        <!-- <button class="menu-btn" onclick="toggleMenu()">☰</button> -->
+    </nav>
+    <h1>YouTube Downloader</h1>
+    <form id="form">
+        <label for="input-bar">YouTube link: </label>
+        <input type="text" id="input-bar" placeholder="Enter video url" required>
+
+        <label for="input-menu-type">type: </label>
+        <select id="input-menu-type" onchange="toggleType()">
+            <option value="video">video</option>
+            <option value="audio">audio</option>
+        </select>
+
+
+        <label for="input-menu-format-video" class="video-element">format: </label>
+        <select class="video-element" id="input-menu-format-video">
+            <option value="mp4">mp4</option>
+        </select>
+
+        <label for="input-menu-format-audio" class="audio-element hidden">format: </label>
+        <select class="audio-element hidden" id="input-menu-format-audio">
+            <option value="mp3">MP3</option>
+            <option value="m4a">M4A</option>
+            <option value="webm">WEBM</option>
+            <option value="aac">AAC</option>
+            <option value="flac">FLAC</option>
+            <option value="opus">OPUS</option>
+            <option value="OGG">OGG</option>
+            <option value="wav">WAV</option>
+        </select>
+
+
+
+        <label for="input-menu-resolution" class="video-element">Resolution: </label>
+        <select class="video-element" id="input-menu-resolution">
+            <option value="144p">144p</option>
+            <option value="360p">360p</option>
+            <option value="480p">480p</option>
+            <option value="720p">720p</option>
+            <option value="1080p">1080p</option>
+        </select>
+
+        <button type="submit">Download</button>
+        <!-- <button type="button" id="remove-files">remove files</button> -->
+    </form>
+
+    <h2 id="downloads" style="display: none;">Downloads</h2>
+    <div id="cards-container"></div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- by bertramrq: https://www.youtube.com/@BertramRQ -->
+</body>
+
+</html>
