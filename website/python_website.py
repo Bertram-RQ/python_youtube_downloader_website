@@ -12,6 +12,7 @@ downloads = {}
 
 app = Flask(__name__)
 
+
 @app.route('/downloads/<unique_id>')
 def download_file(unique_id):
     """Serve the file when user visits the unique link"""
@@ -25,9 +26,11 @@ def download_file(unique_id):
 
     return send_file(file_path, as_attachment=True)
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/submit', methods=['POST'])
 def submit():
@@ -46,10 +49,15 @@ def submit():
 
     video_title = get_video_title(input_value)
     print(f"{video_title=}")
+
     video_channel_name = get_video_channel_name(input_value)
     print(f"{video_channel_name=}")
-    vidoe_channel_link = get_video_channel_link(input_value)
-    print(f"{vidoe_channel_link=}")
+
+    video_channel_link = get_video_channel_link(input_value)
+    print(f"{video_channel_link=}")
+
+    video_thumbnail_link = get_video_thumbnail(input_value)
+    print(f"{video_thumbnail_link=}")
 
     try:
         if selected_type == "audio":
@@ -74,7 +82,8 @@ def submit():
                     "video_title": video_title,
                     "video_url": input_value,
                     "video_channel_name": video_channel_name,
-                    "video_channel_link": vidoe_channel_link,
+                    "video_channel_link": video_channel_link,
+                    "video_thumbnail_link": video_thumbnail_link
                     })
 
 
@@ -94,7 +103,6 @@ def handle_files_command():
         else:
             folders.remove(folder)
 
-
     print(folders)
 
     # Iterate over each file and remove it
@@ -105,9 +113,6 @@ def handle_files_command():
                 os.remove(file_path)
                 print(f"Removed: {file_path}")
     return Response(status=204)  # No Content
-
-
-
 
 
 def download_video(url, card_id, save_path=".", max_resolution="1080p"):
@@ -155,28 +160,28 @@ def download_video(url, card_id, save_path=".", max_resolution="1080p"):
     # print(download_link)
     return download_link
 
+
 def download_audio(url, card_id, selected_format="mp3", save_path="."):
     print(f"download_audio: {selected_format=}")
     if selected_format.lower() == "ogg":
-        format = "m4a"
+        audio_format = "m4a"
     elif selected_format.lower() == "webm":
-        format = "m4a"
+        audio_format = "m4a"
     else:
-        format = selected_format.lower()
+        audio_format = selected_format.lower()
 
     ydl_opts = {
         'format': 'bestaudio/best',  # Select best available audio format
         'extract_audio': True,  # Extract only audio
-        'audio_format': format,  # Set preferred audio format (change to 'mp3' if needed)
+        'audio_format': audio_format,  # Set preferred audio format (change to 'mp3' if needed)
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',  # Ensures proper conversion of extracted audio
-            'preferredcodec': format,  # Convert to 'mp3' or 'm4a'
+            'preferredcodec': audio_format,  # Convert to 'mp3' or 'm4a'
             'preferredquality': '192',  # Adjust bitrate (128, 192, 320 for mp3)
         }],
         'outtmpl': f'{save_path}/%(title)s_{card_id}.%(ext)s',  # Temporary file name before conversion
         'noplaylist': True,  # Ensure only the single audio is downloaded, not the entire playlist
     }
-
 
     print(f"Downloading audio to: {ydl_opts['outtmpl']}")
 
@@ -188,7 +193,7 @@ def download_audio(url, card_id, selected_format="mp3", save_path="."):
 
         # Check the file path before and after conversion
         # After conversion, the extension should match the desired format (e.g., m4a, mp3)
-        converted_file_path = output_file.replace(output_file.split('.')[-1], format)
+        converted_file_path = output_file.replace(output_file.split('.')[-1], audio_format)
 
         full_file_path = os.path.abspath(converted_file_path)
 
@@ -200,8 +205,8 @@ def download_audio(url, card_id, selected_format="mp3", save_path="."):
         os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], selected_format))
         full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
 
-    if format == "aac":
-        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], format))
+    if audio_format == "aac":
+        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], audio_format))
 
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
 
@@ -233,6 +238,20 @@ def get_video_channel_link(url):
         return info.get('channel_url')
 
 
+def get_video_thumbnail(url):
+    # Create a yt-dlp object with a specific format for extracting metadata
+    ydl_opts = {
+        'quiet': True,  # Suppress output
+        'extract_flat': True,  # Only get metadata (not download video)
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        # Extract info about the video
+        info_dict = ydl.extract_info(url, download=False)
+
+        # Get the thumbnail URL from the extracted information
+        thumbnail_url = info_dict.get('thumbnail', None)
+        return thumbnail_url
 
 
 if __name__ == '__main__':

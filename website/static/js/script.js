@@ -50,6 +50,7 @@ document.getElementById("form").addEventListener("submit", function (event) {
     // Add the input bar and input menu values to the card
     if (selectedType === "audio") {
         card.innerHTML = `
+        <div class="thumbnail-div"></div>
         <h3 class="card-download-info">Downloading:<a class="card-download-info-a"> ${inputValue}</a></h3>
         <p class="card-info time-taken">Took: ...</p>
         <p class="card-info">Type: ${selectedType}</p>
@@ -58,6 +59,7 @@ document.getElementById("form").addEventListener("submit", function (event) {
     `;
     } else {
         card.innerHTML = `
+        <div class="thumbnail-div"></div>
         <h3 class="card-download-info">Downloading:<a class="card-download-info-a"> ${inputValue}</a></h3>
         <p class="card-info time-taken">Took: ...</p>
         <p class="card-info">Type: ${selectedType}</p>
@@ -105,6 +107,17 @@ document.getElementById("form").addEventListener("submit", function (event) {
             // `Downloaded: ${data.video_title}`
 
             // `Downloaded: <a href="${data.video_url}">wdoijwaoijd</a>`
+
+            const thumbnailDiv = card.querySelector(".thumbnail-div");
+            console.log(thumbnailDiv)
+            thumbnailDiv.style = "max-width: 50%; max-height: 80%"
+
+            const thumbnailImage = document.createElement("img");
+            thumbnailImage.src = data.video_thumbnail_link;
+            // thumbnailImage.style = "max-width: 50%; max-height: 80%"
+            thumbnailImage.classList.add("thumbnail-image");
+
+            thumbnailDiv.appendChild(thumbnailImage);
 
             const downloadInfo_a = card.querySelector(".card-download-info-a");
             const downloadInfo = card.querySelector(".card-download-info");
