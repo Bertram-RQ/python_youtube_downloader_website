@@ -42,6 +42,16 @@ run `py python_website.py` in cmd in the website folder (i believe bash would al
 
 ## FAQ
 
+#### Is the code well optimized?
+
+no
+
+
+#### Does it Download videos fast?
+
+depends on your internet connection but it does download quite fast for me
+
+
 #### Was chatgpt used to make this program?
 
 Yes
@@ -62,7 +72,7 @@ No
 - Supports Video Download (MP4)
 - Up To 1080p Downloading
 - Supports Audio Only Download (MP3, M4A, WEBM, AAC, FLAC, OPUS, OGG, WAV)
-- Shows video name and channel name when done Downloading
+- Shows video name channel name (with link) and thumbnail when done Downloading
 - one Downside It does not have an automatic removal system (i might make it) so there's a button that'll delete all the files
 
 ## License
