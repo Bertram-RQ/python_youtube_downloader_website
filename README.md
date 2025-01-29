@@ -12,14 +12,16 @@ it allows you to download youtube videos (may not work with age restricted video
 
 Step 1: install [Python](https://www.python.org/downloads/)
 
-Step 2: install packages
+Step 2: install [FFmpeg](https://phoenixnap.com/kb/ffmpeg-windows)
+
+Step 3: install packages
 
 ```bash
 pip install yt_dlp
 pip install flask
 ```
 
-Step 3: setup IP and Port to use (you usually won't need to change this if you're running it on your own machine)
+Step 4: setup IP and Port to use (you usually won't need to change this if you're running it on your own machine)
 
 ```python
 ip_address = "127.0.0.1"
