@@ -64,7 +64,7 @@ document.getElementById("form").addEventListener("submit", function (event) {
         <p class="card-info time-taken">Took: ...</p>
         <p class="card-info">Type: ${selectedType}</p>
         <p class="card-info">Format: ${selectedFormat}</p>
-        <p class="card-info">Resolution: ${selectedOption}</p>
+        <p class="card-info card-resolution-info">Selected Resolution: ${selectedOption}</p>
         <button class="download-button button--loading" disabled><span class="button-text button__text">Wait...</span></button>
     `;
     }
@@ -103,6 +103,11 @@ document.getElementById("form").addEventListener("submit", function (event) {
                 console.log(`told to not keep: ${data.card_id}`)
                 return
             }
+
+
+            const cardResolutionInfo = card.querySelector(".card-resolution-info");
+            cardResolutionInfo.textContent = `Resolution: ${data.best_available_resolution}`
+
 
             // `Downloaded: ${data.video_title}`
 

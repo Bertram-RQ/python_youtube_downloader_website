@@ -42,49 +42,57 @@ def submit():
     input_value = request.form.get('input-bar')  # Get the input value from the form
     selected_option_resolution = request.form.get('input-menu-resolution')  # Get the selected resolution from the form
     card_id = request.form.get('card-id')  # Get the unique card ID
-
-    if not selected_format or selected_format.lower() == "none":
-        print(f"selected_format is not selected stopping")
-        return jsonify({'card_id': card_id, 'should_keep': False})
-
-    video_title = get_video_title(input_value)
-    print(f"{video_title=}")
-
-    video_channel_name = get_video_channel_name(input_value)
-    print(f"{video_channel_name=}")
-
-    video_channel_link = get_video_channel_link(input_value)
-    print(f"{video_channel_link=}")
-
-    video_thumbnail_link = get_video_thumbnail(input_value)
-    print(f"{video_thumbnail_link=}")
-
     try:
-        if selected_type == "audio":
-            download_link = download_audio(input_value, card_id, selected_format, "audios")
-        else:
-            download_link = download_video(input_value, card_id, "videos", selected_option_resolution)
+
+        if not selected_format or selected_format.lower() == "none":
+            print(f"selected_format is not selected stopping")
+            return jsonify({'card_id': card_id, 'should_keep': False})
+
+        video_title = get_video_title(input_value)
+        print(f"{video_title=}")
+
+        video_channel_name = get_video_channel_name(input_value)
+        print(f"{video_channel_name=}")
+
+        video_channel_link = get_video_channel_link(input_value)
+        print(f"{video_channel_link=}")
+
+        video_thumbnail_link = get_video_thumbnail(input_value)
+        print(f"{video_thumbnail_link=}")
+
+        best_resolution = get_best_available_resolution(input_value, selected_option_resolution)
+        print(f"{best_resolution=}")
+
+        try:
+            if selected_type == "audio":
+                download_link = download_audio(input_value, card_id, selected_format, "audios")
+            else:
+                download_link = download_video(input_value, card_id, "videos", selected_option_resolution)
+        except Exception as e:
+            print(f"failed to download removing card\nError: {e}")
+            return jsonify({'card_id': card_id, 'should_keep': False})
+        print(f"{download_link=}")
+
+        # For now, we will mock the download link
+        #   download_link = "https://www.example.com"  # Replace this with real download logic
+        print(f"{card_id=}")
+        end_time = time.time()
+
+        # Return the link and the card ID as JSON
+        return jsonify({'card_id': card_id,
+                        'download_link': download_link,
+                        'should_keep': True,
+                        "time_taken": round(end_time - start_time, 0),
+                        "video_title": video_title,
+                        "video_url": input_value,
+                        "video_channel_name": video_channel_name,
+                        "video_channel_link": video_channel_link,
+                        "video_thumbnail_link": video_thumbnail_link,
+                        "best_available_resolution": best_resolution
+                        })
     except Exception as e:
         print(f"failed to download removing card\nError: {e}")
         return jsonify({'card_id': card_id, 'should_keep': False})
-    print(f"{download_link=}")
-
-    # For now, we will mock the download link
-    #   download_link = "https://www.example.com"  # Replace this with real download logic
-    print(f"{card_id=}")
-    end_time = time.time()
-
-    # Return the link and the card ID as JSON
-    return jsonify({'card_id': card_id,
-                    'download_link': download_link,
-                    'should_keep': True,
-                    "time_taken": round(end_time - start_time, 0),
-                    "video_title": video_title,
-                    "video_url": input_value,
-                    "video_channel_name": video_channel_name,
-                    "video_channel_link": video_channel_link,
-                    "video_thumbnail_link": video_thumbnail_link
-                    })
 
 
 @app.route('/files', methods=['POST'])
@@ -124,8 +132,10 @@ def download_video(url, card_id, save_path=".", max_resolution="1080p"):
     }
 
     # Normalize resolution input
-    max_resolution = resolution_map.get(max_resolution, max_resolution)
-    print(f"{max_resolution=}")
+    #   max_resolution = resolution_map.get(max_resolution, max_resolution)
+    #   print(f"{max_resolution=}")
+
+    max_resolution = get_best_available_resolution(url, max_resolution)
 
     ydl_opts = {
         'format': f'bestvideo[vcodec^=avc1][height<={max_resolution[:-1]}]+bestaudio[ext=m4a]/b[vcodec^=avc1]',
@@ -137,7 +147,7 @@ def download_video(url, card_id, save_path=".", max_resolution="1080p"):
         }],
         'outtmpl': f'{save_path}/%(title)s_{max_resolution}_{card_id}.%(ext)s',  # Saves with video title
     }
-    print(f'{save_path}/%(title)s_{card_id}.%(ext)s')
+    # print(f'{save_path}/%(title)s_{card_id}.%(ext)s')
 
     print(f"{ydl_opts['outtmpl']=}")
 
@@ -252,6 +262,42 @@ def get_video_thumbnail(url):
         # Get the thumbnail URL from the extracted information
         thumbnail_url = info_dict.get('thumbnail', None)
         return thumbnail_url
+
+
+def get_best_available_resolution(url, max_resolution="1080p"):
+    """Returns the highest available resolution up to the specified max resolution."""
+
+    # Convert resolution string to an integer (e.g., "1080p" → 1080)
+    def res_to_int(res):
+        return int(res.replace("p", "")) if res else 0
+
+    # Get available formats
+    ydl_opts = {'quiet': True}  # Suppress unnecessary output
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+
+    available_resolutions = set()
+
+    for fmt in info.get('formats', []):
+        if fmt.get('vcodec') != 'none':  # Ensure it's a video format
+            height = fmt.get('height')
+            if height:
+                available_resolutions.add(f"{height}p")
+
+    if not available_resolutions:
+        return None  # No valid video resolutions found
+
+    # Convert max_resolution to integer
+    max_res_int = res_to_int(max_resolution)
+
+    # Filter resolutions within the allowed limit and find the highest available
+    filtered_resolutions = [res for res in available_resolutions if res_to_int(res) <= max_res_int]
+
+    if not filtered_resolutions:
+        return None  # No resolutions available within the limit
+
+    # Return the highest available resolution within the limit
+    return max(filtered_resolutions, key=res_to_int)
 
 
 if __name__ == '__main__':
