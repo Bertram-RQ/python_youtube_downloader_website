@@ -40,6 +40,17 @@ run `py python_website.py` in cmd in the website folder (i believe bash would al
 - [BertramRQ](https://github.com/Bertram-RQ)
 
 
+## Features
+
+
+- Opens In Browser Automatically When Run
+- Supports Video Download (MP4)
+- Up To 1080p Downloads
+- Supports Audio Only Download (MP3, M4A, WEBM, AAC, FLAC, OPUS, OGG, WAV)
+- Shows video name, channel name, (both with link) and thumbnail when finished Downloading
+- one Downside It does not have an automatic removal system (i might make it) so there's a button that'll delete all the files
+
+
 ## FAQ
 
 #### Is the code well optimized?
@@ -64,16 +75,6 @@ Yes
 
 No
 
-
-## Features
-
-
-- Opens In Browser Automatically When Run
-- Supports Video Download (MP4)
-- Up To 1080p Downloading
-- Supports Audio Only Download (MP3, M4A, WEBM, AAC, FLAC, OPUS, OGG, WAV)
-- Shows video name channel name (with link) and thumbnail when done Downloading
-- one Downside It does not have an automatic removal system (i might make it) so there's a button that'll delete all the files
 
 ## License
 
