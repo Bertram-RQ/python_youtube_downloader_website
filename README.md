@@ -1,11 +1,11 @@
 
 # YouTube Downloader Website
 
-This YouTube Downloader is buildt with python, html, css, and javascript
+This YouTube Downloader is built with python, html, css, and javascript
 
-this program is intended for personal use
+**this program is intended for personal use**
 
-it allows you to download youtube videos (may not work with age restricted video) and download them directly from the main page
+it allows you to download youtube videos (may not work with age restricted videos) and download them directly from the main page
 
 
 ## Installation
@@ -32,9 +32,9 @@ port = 5500
 
 To run the program just go into the website and double click the `python_website.py` file or 
 
-run `py python_website.py` in cmd in the website folder (i believe bash would also work) 
+run `py python_website.py` in cmd in the website folder (or any other terminal) 
 
-("python_website.py" is the filename i set so if you changed it then the same applies with whatever you put at the filename)
+(`**python_website.py**` is the **filename** i set so if you changed it then the same applies with whatever you put at the **filename**)
 ## Authors
 
 - [BertramRQ](https://github.com/Bertram-RQ)
