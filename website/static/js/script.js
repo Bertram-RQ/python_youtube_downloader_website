@@ -53,7 +53,7 @@ document.getElementById("form").addEventListener("submit", function (event) {
         <div class="thumbnail-div"></div>
         <h3 class="card-download-info">Downloading:<a class="card-download-info-a"> ${inputValue}</a></h3>
         <p class="card-info time-taken">Took: ...</p>
-        <p class="card-info">Type: ${selectedType}</p>
+        <p class="card-info card-type">Type: ${selectedType}</p>
         <p class="card-info">Format: ${selectedFormat}</p>
         <button class="download-button button--loading" disabled><span class="button-text button__text">Wait...</span></button>
     `;
@@ -62,7 +62,7 @@ document.getElementById("form").addEventListener("submit", function (event) {
         <div class="thumbnail-div"></div>
         <h3 class="card-download-info">Downloading:<a class="card-download-info-a"> ${inputValue}</a></h3>
         <p class="card-info time-taken">Took: ...</p>
-        <p class="card-info">Type: ${selectedType}</p>
+        <p class="card-info card-type">Type: ${selectedType}</p>
         <p class="card-info">Format: ${selectedFormat}</p>
         <p class="card-info card-resolution-info">Selected Resolution: ${selectedOption}</p>
         <button class="download-button button--loading" disabled><span class="button-text button__text">Wait...</span></button>
@@ -105,9 +105,10 @@ document.getElementById("form").addEventListener("submit", function (event) {
             }
 
 
-            const cardResolutionInfo = card.querySelector(".card-resolution-info");
-            cardResolutionInfo.textContent = `Resolution: ${data.best_available_resolution}`
-
+            if (document.querySelector(".card-type").textContent === "video") {
+                const cardResolutionInfo = card.querySelector(".card-resolution-info");
+                cardResolutionInfo.textContent = `Resolution: ${data.best_available_resolution}`
+            };
 
             // `Downloaded: ${data.video_title}`
 
