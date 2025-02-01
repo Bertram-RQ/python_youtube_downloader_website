@@ -104,17 +104,20 @@ def handle_files_command():
     # List all files in the folder
     folders = os.listdir()
     print(folders)
+    kept_folders = []
     for folder in folders:
-        print(f"{folder=}")
+        # print(f"current: {folder=}")
         if folder == "audios" or folder == "videos":
-            continue
+            print(f"kept: {folder=}")
+            kept_folders.append(folder)
         else:
-            folders.remove(folder)
+            print(f"removed: {folder=}")
+            #   folders.remove(folder)
 
-    print(folders)
+    print(f"{kept_folders=}")
 
     # Iterate over each file and remove it
-    for folder_name in folders:
+    for folder_name in kept_folders:
         for file in os.listdir(folder_name):
             file_path = os.path.join(folder_name, file)
             if os.path.isfile(file_path):  # Check if it's a file
