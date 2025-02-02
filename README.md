@@ -19,6 +19,7 @@ Step 3: install packages
 ```bash
 pip install yt_dlp
 pip install flask
+pip install requests
 ```
 
 Step 4: setup IP and Port to use (you usually won't need to change this if you're running it on your own machine)
@@ -43,6 +44,7 @@ run `py python_website.py` in cmd in the website folder (or any other terminal)
 ## Features
 
 
+- Supports Youtube and Tiktok (tiktok is possibly buggy)
 - Opens In Browser Automatically When Run
 - Supports Video Download (MP4)
 - Up To 1080p Downloads
