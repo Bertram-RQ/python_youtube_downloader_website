@@ -12,13 +12,13 @@ it allows you to download youtube and tiktok videos (may not work with age restr
 
 Step 1: install [Python](https://www.python.org/downloads/)
 
-[!NOTE]
-Remember to add it to [PATH](https://phoenixnap.com/kb/add-python-to-path)
+> [!NOTE]
+> Remember to add it to [PATH](https://phoenixnap.com/kb/add-python-to-path)
 
 Step 2: install [FFmpeg](https://phoenixnap.com/kb/ffmpeg-windows)
 
-[!NOTE]
-Remember to add it to [PATH](https://phoenixnap.com/kb/ffmpeg-windows#Step_3_Add_FFmpeg_to_PATH)
+> [!NOTE]
+> Remember to add it to [PATH](https://phoenixnap.com/kb/ffmpeg-windows#Step_3_Add_FFmpeg_to_PATH)
 
 Step 3: install packages
 
