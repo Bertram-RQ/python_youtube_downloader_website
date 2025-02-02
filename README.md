@@ -17,6 +17,12 @@ Step 2: install [FFmpeg](https://phoenixnap.com/kb/ffmpeg-windows)
 Step 3: install packages
 
 ```bash
+pip install -r requirements.txt
+```
+
+or 
+
+```bash
 pip install yt_dlp
 pip install flask
 pip install requests
