@@ -10,11 +10,17 @@ it allows you to download youtube and tiktok videos (may not work with age restr
 
 ## Installation
 
-- Step 1: install [Python](https://www.python.org/downloads/)
+Step 1: install [Python](https://www.python.org/downloads/)
 
-- Step 2: install [FFmpeg](https://phoenixnap.com/kb/ffmpeg-windows)
+[!NOTE]
+Remember to add it to [PATH](https://phoenixnap.com/kb/add-python-to-path)
 
-- Step 3: install packages
+Step 2: install [FFmpeg](https://phoenixnap.com/kb/ffmpeg-windows)
+
+[!NOTE]
+Remember to add it to [PATH](https://phoenixnap.com/kb/ffmpeg-windows#Step_3_Add_FFmpeg_to_PATH)
+
+Step 3: install packages
 
 ```bash
 pip install -r requirements.txt
@@ -28,7 +34,7 @@ pip install flask
 pip install requests
 ```
 
-- Step 4: setup IP and Port to use (you usually won't need to change this if you're running it on your own machine)
+Step 4: setup IP and Port to use (you usually won't need to change this if you're running it on your own machine)
 
 ```python
 ip_address = "127.0.0.1"
