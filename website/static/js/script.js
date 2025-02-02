@@ -24,15 +24,34 @@ document.getElementById("form").addEventListener("submit", function (event) {
 
     // Check if the input value starts with one of the allowed prefixes
     const real_youtube_links = ["https://www.youtube.com", "https://youtube.com", "https://youtu.be"]
+    const real_Tiktok_links = ["https://www.tiktok.com", "https://m.tiktok.com"]
 
     // Check if the string starts with any of the prefixes in the list
     let startsWithPrefix = false;
+    let isYoutubeVideo = false;
+    let isTiktokVideo = false;
     for (let i = 0; i < real_youtube_links.length; i++) {
         if (inputValue.startsWith(real_youtube_links[i])) {
             startsWithPrefix = true;
+            isYoutubeVideo = true;
             break;  // Exit loop as soon as we find a match
         }
     }
+    for (let i = 0; i < real_Tiktok_links.length; i++) {
+        if (inputValue.startsWith(real_Tiktok_links[i])) {
+            startsWithPrefix = true;
+            isTiktokVideo = true;
+        }
+    }
+
+    // if (selectedType === "audio" && isTiktokVideo) {
+    //     alert("unable to download tiktok videos as audio only sorry");
+    //     return;
+    // }
+
+    console.log(startsWithPrefix)
+    console.log(isYoutubeVideo)
+    console.log(isTiktokVideo)
 
     if (!startsWithPrefix) {
         alert(`Input URL must start with a valid prefix (${real_youtube_links[0]}, ${real_youtube_links[1]}, ${real_youtube_links[2]}).`);
@@ -69,6 +88,13 @@ document.getElementById("form").addEventListener("submit", function (event) {
     `;
     }
 
+    let platform
+
+    if (isTiktokVideo) {
+        platform = "tiktok";
+    } else {
+        platform = "youtube";
+    }
 
 
     const downloads_label = document.getElementById("downloads");
@@ -89,7 +115,8 @@ document.getElementById("form").addEventListener("submit", function (event) {
             'format': selectedFormat,
             'input-bar': inputValue,
             'input-menu-resolution': selectedOption,
-            'card-id': cardId  // Send the card's unique ID
+            'card-id': cardId,  // Send the card's unique ID
+            'platform': platform
         })
     })
         .then(response => response.json())
@@ -100,14 +127,23 @@ document.getElementById("form").addEventListener("submit", function (event) {
 
             if (data.should_keep === false) {
                 card.remove()
+                const downloadsH2 = document.getElementById("downloads")
+                downloadsH2.style.display = "none"
                 console.log(`told to not keep: ${data.card_id}`)
                 return
             }
 
+            console.log(data.video_platform)
 
-            if (document.querySelector(".card-type").textContent === "video") {
+
+            if (data.selected_type === "video") {
                 const cardResolutionInfo = card.querySelector(".card-resolution-info");
-                cardResolutionInfo.textContent = `Resolution: ${data.best_available_resolution}`
+                console.log(cardResolutionInfo)
+                if (data.video_platform === "tiktok") {
+                    cardResolutionInfo.textContent = `Resolution: ???`;
+                } else {
+                    cardResolutionInfo.textContent = `Resolution: ${data.best_available_resolution}`
+                }
             };
 
             // `Downloaded: ${data.video_title}`

@@ -1,6 +1,9 @@
 import time
 import yt_dlp
 import os
+import re
+import requests
+import subprocess
 
 from flask import Flask, render_template, request, jsonify, send_file, Response
 import webbrowser
@@ -35,13 +38,22 @@ def index():
 @app.route('/submit', methods=['POST'])
 def submit():
     start_time = time.time()
+
     selected_type = request.form.get('input-menu-type')
     print(f"{selected_type=}")
+
     selected_format = request.form.get('format')
     print(f"{selected_format=}")
+
     input_value = request.form.get('input-bar')  # Get the input value from the form
+
     selected_option_resolution = request.form.get('input-menu-resolution')  # Get the selected resolution from the form
+
     card_id = request.form.get('card-id')  # Get the unique card ID
+
+    video_platform = request.form.get('platform')
+    print(video_platform)
+
     try:
 
         if not selected_format or selected_format.lower() == "none":
@@ -65,9 +77,16 @@ def submit():
 
         try:
             if selected_type == "audio":
-                download_link = download_audio(input_value, card_id, selected_format, "audios")
+                if video_platform == "tiktok":
+                    #   return jsonify({'card_id': card_id, 'should_keep': False})
+                    download_link = download_tiktok_audio(input_value, card_id, selected_format, "audios")
+                else:
+                    download_link = download_audio(input_value, card_id, selected_format, "audios")
             else:
-                download_link = download_video(input_value, card_id, "videos", selected_option_resolution)
+                if video_platform == "tiktok":
+                    download_link = download_tiktok_video(input_value, card_id, "videos")
+                else:
+                    download_link = download_youtube_video(input_value, card_id, "videos", selected_option_resolution)
         except Exception as e:
             print(f"failed to download removing card\nError: {e}")
             return jsonify({'card_id': card_id, 'should_keep': False})
@@ -88,7 +107,9 @@ def submit():
                         "video_channel_name": video_channel_name,
                         "video_channel_link": video_channel_link,
                         "video_thumbnail_link": video_thumbnail_link,
-                        "best_available_resolution": best_resolution
+                        "selected_type": selected_type,
+                        "best_available_resolution": best_resolution,
+                        "video_platform": video_platform
                         })
     except Exception as e:
         print(f"failed to download removing card\nError: {e}")
@@ -126,7 +147,7 @@ def handle_files_command():
     return Response(status=204)  # No Content
 
 
-def download_video(url, card_id, save_path=".", max_resolution="1080p"):
+def download_youtube_video(url, card_id, save_path=".", max_resolution="1080p"):
     # Define resolution mapping (in case user enters just numbers)
     resolution_map = {
         "2160": "2160p", "1440": "1440p",
@@ -226,6 +247,145 @@ def download_audio(url, card_id, selected_format="mp3", save_path="."):
     downloads[card_id] = full_file_path
     download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
     return download_link
+
+
+
+
+def sanitize_filename(title, max_length=100):
+    """Removes invalid filename characters and trims length."""
+    title = re.sub(r'[<>:"/\\|?*]', '', title)  # Remove illegal characters
+    return title[:max_length].strip()  # Trim to avoid long filenames
+
+def resolve_tiktok_short_url(short_url):
+    """Expands shortened TikTok URLs (vm.tiktok.com/vt.tiktok.com) to full URLs."""
+    response = requests.head(short_url, allow_redirects=True)
+    return response.url
+
+
+def convert_to_h264(input_file, output_file):
+    """Converts a video to H.264 format using FFmpeg."""
+    command = [
+        "ffmpeg", "-y", "-i", input_file,
+        "-c:v", "libx264", "-preset", "slow", "-crf", "23",  # Encode as H.264
+        "-c:a", "aac", "-b:a", "128k",  # Keep audio quality
+        output_file
+    ]
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+
+def download_tiktok_video(url, card_id, save_path="."):
+    """Downloads a TikTok video in H.264 format, ensuring a valid filename."""
+
+    if "vm.tiktok.com" in url or "vt.tiktok.com" in url:
+        url = resolve_tiktok_short_url(url)
+
+    ydl_opts = {
+        'format': 'bv*[vcodec^=avc1]+ba/b[ext=mp4]',  # Force H.264 (AVC)
+        'merge_output_format': 'mp4',
+        'postprocessors': [{'key': 'FFmpegVideoRemuxer', 'preferedformat': 'mp4'}],
+        'outtmpl': f'{save_path}/temp_%(id)s_{card_id}.mp4',  # Safe naming
+    }
+
+    print(f"Downloading TikTok video: {url}")
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        title = info_dict.get("title", "video")  # Extract title
+        output_file = ydl.prepare_filename(info_dict)
+        full_file_path = os.path.abspath(output_file)  # Get the full absolute path
+        safe_title = sanitize_filename(title)  # Fix filename
+        temp_file = os.path.join(save_path, f"temp_{safe_title}_{card_id}.mp4")
+        final_file = os.path.join(save_path, f"final_{safe_title}_{card_id}.mp4")
+
+    print(f"{full_file_path=}")
+    print(f"{temp_file=}")
+    print(f"{final_file=}")
+
+    os.rename(full_file_path, temp_file)
+
+    print(f"Converting to H.264: {temp_file} → {final_file}")
+    convert_to_h264(temp_file, final_file)
+    os.remove(temp_file)
+
+
+
+    downloads[card_id] = os.path.abspath(final_file)
+    download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    # print(download_link)
+    return download_link
+
+
+def download_tiktok_audio(url, card_id, selected_format="mp3", save_path="."):
+    """Downloads only the audio from a TikTok video in the specified format."""
+
+    # Resolve TikTok short links
+    if "vm.tiktok.com" in url or "vt.tiktok.com" in url:
+        url = resolve_tiktok_short_url(url)
+
+    print(f"download_audio: {selected_format=}")
+    if selected_format.lower() == "ogg":
+        audio_format = "m4a"
+    elif selected_format.lower() == "webm":
+        audio_format = "m4a"
+    else:
+        audio_format = selected_format.lower()
+
+    ydl_opts = {
+        'format': 'bestaudio/best',  # Ensure best available audio
+        'extract_audio': True,  # Extract audio only
+        'audio_format': audio_format,  # Convert to selected format
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': audio_format,  # Convert to mp3, m4a, etc.
+            'preferredquality': '192',  # Adjust bitrate (128, 192, 320)
+        }],
+        'outtmpl': f'{save_path}/temp_%(id)s_{card_id}.%(ext)s',  # Safe filename
+        'noplaylist': True,  # Prevent playlist downloads
+    }
+
+    print(f"Downloading TikTok audio: {url}")
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        title = info_dict.get("title", "video")  # Extract title
+        output_file = ydl.prepare_filename(info_dict)  # Get temp filename
+        full_file_path = os.path.abspath(output_file.replace(output_file.split('.')[-1], audio_format))  # Final filename
+        safe_title = sanitize_filename(title)  # Fix filename
+        temp_file = os.path.join(save_path, f"temp_{safe_title}_{card_id}.{selected_format}")
+        final_file = os.path.join(save_path, f"final_{safe_title}_{card_id}.{selected_format}")
+
+    print(f"{full_file_path=}")
+    print(f"{temp_file=}")
+    print(f"{final_file=}")
+
+
+
+
+    if selected_format.lower() == "ogg":
+        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"),
+                  full_file_path.replace(full_file_path.split('.')[-1], selected_format))
+        full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+
+    if selected_format.lower() == "webm":
+        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"),
+                  full_file_path.replace(full_file_path.split('.')[-1], selected_format))
+        full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+
+    if audio_format == "aac":
+        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"),
+                  full_file_path.replace(full_file_path.split('.')[-1], audio_format))
+
+    os.rename(full_file_path, final_file)
+
+    full_file_path = final_file
+
+    print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
+
+    downloads[card_id] = full_file_path
+    download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    return download_link
+
 
 
 def get_video_title(url):
