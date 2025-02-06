@@ -9,6 +9,7 @@ from flask import Flask, render_template, request, jsonify, send_file, Response
 import webbrowser
 
 ip_address = "127.0.0.1"
+use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
 port = 5500
 
 downloads = {}
@@ -28,6 +29,11 @@ def download_file(unique_id):
         return "Invalid or expired link", 404
 
     return send_file(file_path, as_attachment=True)
+
+@app.route('/server-ip')
+def get_server_ip():
+    server_ip = request.host  # This gets the domain or IP the user used to connect
+    return jsonify({"server_ip": server_ip})
 
 
 @app.route('/')
@@ -54,6 +60,9 @@ def submit():
     video_platform = request.form.get('platform')
     print(video_platform)
 
+    server_ip = request.form.get('server-ip')
+    print(f"{server_ip=}")
+
     try:
 
         if not selected_format or selected_format.lower() == "none":
@@ -79,14 +88,14 @@ def submit():
             if selected_type == "audio":
                 if video_platform == "tiktok":
                     #   return jsonify({'card_id': card_id, 'should_keep': False})
-                    download_link = download_tiktok_audio(input_value, card_id, selected_format, "audios")
+                    download_link = download_tiktok_audio(input_value, card_id, server_ip, selected_format, "audios")
                 else:
-                    download_link = download_audio(input_value, card_id, selected_format, "audios")
+                    download_link = download_audio(input_value, card_id, server_ip, selected_format, "audios")
             else:
                 if video_platform == "tiktok":
-                    download_link = download_tiktok_video(input_value, card_id, "videos")
+                    download_link = download_tiktok_video(input_value, card_id, server_ip, "videos")
                 else:
-                    download_link = download_youtube_video(input_value, card_id, "videos", selected_option_resolution)
+                    download_link = download_youtube_video(input_value, card_id, server_ip, "videos", selected_option_resolution)
         except Exception as e:
             print(f"failed to download removing card\nError: {e}")
             return jsonify({'card_id': card_id, 'should_keep': False})
@@ -147,7 +156,7 @@ def handle_files_command():
     return Response(status=204)  # No Content
 
 
-def download_youtube_video(url, card_id, save_path=".", max_resolution="1080p"):
+def download_youtube_video(url, card_id, server_ip, save_path=".", max_resolution="1080p"):
     # Define resolution mapping (in case user enters just numbers)
     resolution_map = {
         "2160": "2160p", "1440": "1440p",
@@ -190,12 +199,15 @@ def download_youtube_video(url, card_id, save_path=".", max_resolution="1080p"):
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
 
     downloads[card_id] = full_file_path
-    download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    if use_user_address:
+        download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    else:
+        download_link = f"http://{server_ip}/downloads/{card_id}"
     # print(download_link)
     return download_link
 
 
-def download_audio(url, card_id, selected_format="mp3", save_path="."):
+def download_audio(url, card_id, server_ip, selected_format="mp3", save_path="."):
     print(f"download_audio: {selected_format=}")
     if selected_format.lower() == "ogg":
         audio_format = "m4a"
@@ -245,7 +257,11 @@ def download_audio(url, card_id, selected_format="mp3", save_path="."):
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
 
     downloads[card_id] = full_file_path
-    download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    if use_user_address:
+        download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    else:
+        download_link = f"http://{server_ip}/downloads/{card_id}"
+    # print(download_link)
     return download_link
 
 
@@ -274,7 +290,7 @@ def convert_to_h264(input_file, output_file):
 
 
 
-def download_tiktok_video(url, card_id, save_path="."):
+def download_tiktok_video(url, card_id, server_ip, save_path="."):
     """Downloads a TikTok video in H.264 format, ensuring a valid filename."""
 
     if "vm.tiktok.com" in url or "vt.tiktok.com" in url:
@@ -308,15 +324,16 @@ def download_tiktok_video(url, card_id, save_path="."):
     convert_to_h264(temp_file, final_file)
     os.remove(temp_file)
 
-
-
     downloads[card_id] = os.path.abspath(final_file)
-    download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    if use_user_address:
+        download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    else:
+        download_link = f"http://{server_ip}/downloads/{card_id}"
     # print(download_link)
     return download_link
 
 
-def download_tiktok_audio(url, card_id, selected_format="mp3", save_path="."):
+def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_path="."):
     """Downloads only the audio from a TikTok video in the specified format."""
 
     # Resolve TikTok short links
@@ -382,8 +399,12 @@ def download_tiktok_audio(url, card_id, selected_format="mp3", save_path="."):
 
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
 
-    downloads[card_id] = full_file_path
-    download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    downloads[card_id] = os.path.abspath(final_file)
+    if use_user_address:
+        download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
+    else:
+        download_link = f"http://{server_ip}/downloads/{card_id}"
+    # print(download_link)
     return download_link
 
 

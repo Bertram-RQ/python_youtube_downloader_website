@@ -38,6 +38,7 @@ Step 4: setup IP and Port to use (you usually won't need to change this if you'r
 
 ```python
 ip_address = "127.0.0.1"
+use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
 port = 5500
 ```
 

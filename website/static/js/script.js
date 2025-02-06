@@ -1,4 +1,4 @@
-document.getElementById("form").addEventListener("submit", function (event) {
+document.getElementById("form").addEventListener("submit", async function (event) {
     /* by bertramrq: https://www.youtube.com/@BertramRQ */
     event.preventDefault();
 
@@ -96,6 +96,12 @@ document.getElementById("form").addEventListener("submit", function (event) {
         platform = "youtube";
     }
 
+    let server_ip = await getServerIP();
+
+    console.log(server_ip)
+
+
+
 
     const downloads_label = document.getElementById("downloads");
     downloads_label.style.display = "unset"
@@ -116,7 +122,8 @@ document.getElementById("form").addEventListener("submit", function (event) {
             'input-bar': inputValue,
             'input-menu-resolution': selectedOption,
             'card-id': cardId,  // Send the card's unique ID
-            'platform': platform
+            'platform': platform,
+            'server-ip': server_ip,
         })
     })
         .then(response => response.json())
@@ -290,3 +297,15 @@ document.getElementById("remove-files").addEventListener("click", function (even
         },
     })
 })
+
+
+async function getServerIP() {
+    try {
+        let response = await fetch('/server-ip');  // Wait for response
+        let data = await response.json();         // Wait for JSON parsing
+        console.log('Connected to Server IP:', data.server_ip);
+        return data.server_ip;                    // Return the IP if needed
+    } catch (error) {
+        console.error('Error fetching server IP:', error);
+    }
+}
