@@ -32,6 +32,7 @@ or
 pip install yt_dlp
 pip install flask
 pip install requests
+pip install emoji
 ```
 
 Step 4: setup IP and Port to use (you usually won't need to change this if you're running it on your own machine)
