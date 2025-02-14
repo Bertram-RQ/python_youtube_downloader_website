@@ -4,6 +4,7 @@ import os
 import re
 import requests
 import subprocess
+from emoji import demojize
 
 from flask import Flask, render_template, request, jsonify, send_file, Response
 import webbrowser
@@ -11,6 +12,8 @@ import webbrowser
 ip_address = "127.0.0.1"
 use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
 port = 5500
+
+# remember to fix emojis not working
 
 downloads = {}
 
@@ -156,6 +159,28 @@ def handle_files_command():
     return Response(status=204)  # No Content
 
 
+def demojize_filename(filename):
+    safe_filename = demojize(filename)
+
+    drive, path = os.path.splitdrive(safe_filename)
+
+    safe_path = path.replace(":", "_")
+
+    safe_filename = os.path.join(drive, safe_path)
+
+    print(f"safe_filename: {type(safe_filename)}: {safe_filename}")
+
+    if os.path.exists(filename):    #and filename != safe_filename
+        #   print("in the os renamer for emojis")
+        try:
+            os.rename(filename, safe_filename)
+        except Exception as e:
+            print(f"could not rename file ERROR: {e}")
+        print(f"{filename} -> {safe_filename}\nFile renamed successfully!")
+        return safe_filename
+
+
+
 def download_youtube_video(url, card_id, server_ip, save_path=".", max_resolution="1080p"):
     # Define resolution mapping (in case user enters just numbers)
     resolution_map = {
@@ -197,6 +222,14 @@ def download_youtube_video(url, card_id, server_ip, save_path=".", max_resolutio
 
     # Print the full path where the video is saved
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
+
+    try:
+        full_file_path = demojize_filename(full_file_path)
+        print(f"audio renamed to: {full_file_path}")
+
+        #   print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
+    except Exception as e:
+        print(f"failed to rename file without emojis \nERROR: {e}")
 
     downloads[card_id] = full_file_path
     if use_user_address:
@@ -242,6 +275,8 @@ def download_audio(url, card_id, server_ip, selected_format="mp3", save_path="."
         converted_file_path = output_file.replace(output_file.split('.')[-1], audio_format)
 
         full_file_path = os.path.abspath(converted_file_path)
+
+    full_file_path = demojize_filename(full_file_path)
 
     if selected_format.lower() == "ogg":
         os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], selected_format))
@@ -324,6 +359,8 @@ def download_tiktok_video(url, card_id, server_ip, save_path="."):
     convert_to_h264(temp_file, final_file)
     os.remove(temp_file)
 
+    final_file = demojize_filename(final_file)
+
     downloads[card_id] = os.path.abspath(final_file)
     if use_user_address:
         download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
@@ -398,6 +435,8 @@ def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_p
     full_file_path = final_file
 
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
+
+    final_file = demojize_filename(final_file)
 
     downloads[card_id] = os.path.abspath(final_file)
     if use_user_address:
