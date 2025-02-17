@@ -55,11 +55,11 @@ port = 5500
 
 ## Running
 
-To run the program just go into the website and double click the `python_website.py` file or 
+To run the program just go into the website folder and double click the `python_website.py` file or 
 
 run `py python_website.py` in cmd in the website folder (or any other terminal) 
 
-(**`python_website.py`** is the **filename** i set so if you changed it then the same applies with whatever you put at the **filename**)
+(**`python_website.py`** is the **filename** i set so if you changed it then the same applies with whatever you put as the **filename**)
 ## Authors
 
 - [BertramRQ](https://github.com/Bertram-RQ)
