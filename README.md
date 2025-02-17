@@ -74,7 +74,7 @@ run `py python_website.py` in cmd in the website folder (or any other terminal)
 - Up To 1080p Downloads
 - Supports Audio Only Download (MP3, M4A, WEBM, AAC, FLAC, OPUS, OGG, WAV)
 - Shows video name, channel name, (both with link) and thumbnail when finished Downloading
-- automatic removal system configurable via config variables
+- Automatic Removal system Configurable via Config variables
 
 
 ## FAQ
