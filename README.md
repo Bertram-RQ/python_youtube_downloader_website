@@ -33,6 +33,7 @@ pip install yt_dlp
 pip install flask
 pip install requests
 pip install emoji
+pip install sqlalchemy
 ```
 
 Step 4: setup IP and Port to use (you usually won't need to change this if you're running it on your own machine)
@@ -40,6 +41,9 @@ Step 4: setup IP and Port to use (you usually won't need to change this if you'r
 ```python
 ip_address = "127.0.0.1"
 use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
+use_automatic_removal_system = True
+removal_time_seconds = 86400  # (86400 = 24 hours) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
+checking_time_seconds = 30 * 60  #  (30 * 60 = 30 minutes) amount of time in seconds between checks for file removal
 port = 5500
 ```
 
@@ -70,7 +74,7 @@ run `py python_website.py` in cmd in the website folder (or any other terminal)
 - Up To 1080p Downloads
 - Supports Audio Only Download (MP3, M4A, WEBM, AAC, FLAC, OPUS, OGG, WAV)
 - Shows video name, channel name, (both with link) and thumbnail when finished Downloading
-- one Downside It does not have an automatic removal system (i might make it) so there's a button that'll delete all the files
+- automatic removal system configurable via config variables
 
 
 ## FAQ

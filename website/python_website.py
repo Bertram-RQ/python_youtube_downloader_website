@@ -1,3 +1,4 @@
+import threading
 import time
 import yt_dlp
 import os
@@ -6,14 +7,21 @@ import requests
 import subprocess
 from emoji import demojize
 
+import youtube_downloader_sql as ydsql
+import youtube_downloader_data as ydd
+
 from flask import Flask, render_template, request, jsonify, send_file, Response
 import webbrowser
 
+
+# region CONFIG SECTION
 ip_address = "127.0.0.1"
 use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
+use_automatic_removal_system = True
+removal_time_seconds = 86400  # (86400 = 24 hours) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
+checking_time_seconds = 30 * 60  #  (30 * 60 = 30 minutes) amount of time in seconds between checks for file removal
 port = 5500
-
-# remember to fix emojis not working
+# endregion CONFIG SECTION
 
 downloads = {}
 
@@ -133,6 +141,7 @@ def handle_files_command():
     print("in here")
     # Clear downloadable files list
     downloads.clear()
+    remove_all_records()
 
     # List all files in the folder
     folders = os.listdir()
@@ -157,6 +166,29 @@ def handle_files_command():
                 os.remove(file_path)
                 print(f"Removed: {file_path}")
     return Response(status=204)  # No Content
+
+
+def add_record_to_database(card_id, filepath):
+    current_time = time.time()
+    record = (0, card_id, filepath, current_time)
+    newentry = ydd.Youtubedownloader.convert_from_tuple(record)
+    ydsql.create_record(newentry)
+
+
+def remove_all_records():
+    ydsql.deleteall()
+
+
+def remove_expired_records():
+    print()
+    records = ydsql.select_all(ydd.Youtubedownloader)
+    for record in records:
+        print(f"seconds since record created: {time.time() - record.time_created}")
+        if time.time() - record.time_created > removal_time_seconds:
+            print(f"deleted: {record.card_id}: {os.path.exists(os.path.abspath(record.filepath))}")
+            os.remove(os.path.abspath(record.filepath))
+            ydsql.delete_expired(ydd.Youtubedownloader, record.card_id)
+    threading.Timer(checking_time_seconds, remove_expired_records).start()
 
 
 def demojize_filename(filename):
@@ -231,6 +263,9 @@ def download_youtube_video(url, card_id, server_ip, save_path=".", max_resolutio
     except Exception as e:
         print(f"failed to rename file without emojis \nERROR: {e}")
 
+    if use_automatic_removal_system:
+        add_record_to_database(card_id, full_file_path)
+
     downloads[card_id] = full_file_path
     if use_user_address:
         download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
@@ -290,6 +325,9 @@ def download_audio(url, card_id, server_ip, selected_format="mp3", save_path="."
         os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], audio_format))
 
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
+
+    if use_automatic_removal_system:
+        add_record_to_database(card_id, full_file_path)
 
     downloads[card_id] = full_file_path
     if use_user_address:
@@ -360,6 +398,9 @@ def download_tiktok_video(url, card_id, server_ip, save_path="."):
     os.remove(temp_file)
 
     final_file = demojize_filename(final_file)
+
+    if use_automatic_removal_system:
+        add_record_to_database(card_id, os.path.abspath(final_file))
 
     downloads[card_id] = os.path.abspath(final_file)
     if use_user_address:
@@ -437,6 +478,9 @@ def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_p
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
 
     final_file = demojize_filename(final_file)
+
+    if use_automatic_removal_system:
+        add_record_to_database(card_id, os.path.abspath(final_file))
 
     downloads[card_id] = os.path.abspath(final_file)
     if use_user_address:
@@ -524,5 +568,7 @@ def get_best_available_resolution(url, max_resolution="1080p"):
 
 
 if __name__ == '__main__':
+    if use_automatic_removal_system:
+        remove_expired_records()
     webbrowser.open(f"http://{ip_address}:{port}")
     app.run(host="0.0.0.0", port=port, debug=False)
