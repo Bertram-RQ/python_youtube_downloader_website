@@ -674,6 +674,8 @@ def get_best_available_resolution(url, max_resolution="1080p"):
 
 
 if __name__ == '__main__':
+    if not use_automatic_removal_system:
+        allow_sync_button = False
     try:
         downloads = load_downloads_list()
     except Exception as e:
