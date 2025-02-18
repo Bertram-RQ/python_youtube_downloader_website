@@ -130,6 +130,10 @@ def submit():
             print(f"selected_format is not selected stopping")
             return jsonify({'card_id': card_id, 'should_keep': False})
 
+        if is_livestream(input_value):
+            print(f"{input_value} is a livestream stopping")
+            return jsonify({'card_id': card_id, 'should_keep': False})
+
         video_title = get_video_title(input_value)
         print(f"{video_title=}")
 
@@ -635,6 +639,19 @@ def get_video_thumbnail(url):
         # Get the thumbnail URL from the extracted information
         thumbnail_url = info_dict.get('thumbnail', None)
         return thumbnail_url
+
+
+
+def is_livestream(url):
+    ydl_opts = {
+        'quiet': True,
+        'extract_flat': True
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        return info.get('is_live', False)
+
 
 
 def get_best_available_resolution(url, max_resolution="1080p"):
