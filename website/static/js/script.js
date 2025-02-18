@@ -24,7 +24,7 @@ document.getElementById("form").addEventListener("submit", async function (event
 
     // Check if the input value starts with one of the allowed prefixes
     const real_youtube_links = ["https://www.youtube.com", "https://youtube.com", "https://youtu.be"]
-    const real_Tiktok_links = ["https://www.tiktok.com", "https://m.tiktok.com"]
+    const real_Tiktok_links = ["https://www.tiktok.com", "https://m.tiktok.com", "https://vm.tiktok.com"]
 
     // Check if the string starts with any of the prefixes in the list
     let startsWithPrefix = false;
@@ -358,7 +358,7 @@ document.getElementById("get-previous").addEventListener("click", async function
 
                 // Check if the input value starts with one of the allowed prefixes
                 const real_youtube_links = ["https://www.youtube.com", "https://youtube.com", "https://youtu.be"]
-                const real_Tiktok_links = ["https://www.tiktok.com", "https://m.tiktok.com"]
+                const real_Tiktok_links = ["https://www.tiktok.com", "https://m.tiktok.com", "https://vm.tiktok.com"]
 
                 // Check if the string starts with any of the prefixes in the list
                 let startsWithPrefix = false;
