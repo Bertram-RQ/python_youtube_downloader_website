@@ -10,17 +10,25 @@ from emoji import demojize
 import youtube_downloader_sql as ydsql
 import youtube_downloader_data as ydd
 
+import json
+
 from flask import Flask, render_template, request, jsonify, send_file, Response
 import webbrowser
 
 
 # region CONFIG SECTION
 ip_address = "127.0.0.1"
-use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
-use_automatic_removal_system = True
-removal_time_seconds = 86400  # (86400 = 24 hours) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
-checking_time_seconds = 30 * 60  #  (30 * 60 = 30 minutes) amount of time in seconds between checks for file removal
 port = 5500
+use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
+
+use_automatic_removal_system = True  # will remove any files that exceeds the "removal_time_seconds" variable
+removal_time_seconds = 1 * 60 * 60  # (1 * 60 * 60 = 1 hour) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
+checking_time_seconds = 30 * 60  # (30 * 60 = 30 minutes) amount of time in seconds between checks for file removal
+
+allow_sync_button = True  # only if "use_automatic_removal_system" is in use
+enable_remove_files_button = True  # recommended for local use
+
+enable_automatic_browser_opening = True  # recommended for ease of use
 # endregion CONFIG SECTION
 
 downloads = {}
@@ -43,8 +51,47 @@ def download_file(unique_id):
 
 @app.route('/server-ip')
 def get_server_ip():
-    server_ip = request.host  # This gets the domain or IP the user used to connect
-    return jsonify({"server_ip": server_ip})
+    if not use_user_address:
+        server_ip = request.host  # This gets the domain or IP the user used to connect
+    else:
+        server_ip = ip_address, port
+    return jsonify({"server_ip": server_ip, "use_user_address": use_user_address})
+
+@app.route('/server-config')
+def get_server_config():
+    return jsonify({"allow_sync": allow_sync_button, "enable_remove_files_button": enable_remove_files_button})
+
+
+def get_all_cards():
+    all_cards = ydsql.select_all(ydd.Youtubedownloader)
+    return [convert_card_to_dict(card) for card in all_cards]
+
+
+def convert_card_to_dict(card):
+    return {
+        "id": card.id,
+        "card_id": card.card_id,
+        "filepath": card.filepath,
+        "time_created": card.time_created,
+        "should_keep": card.should_keep,
+        "time_taken": card.time_taken,
+        "video_tittle": card.video_tittle,  # Keeping original name, even if it's a typo
+        "video_url": card.video_url,
+        "video_channel_name": card.video_channel_name,
+        "video_channel_link": card.video_channel_link,
+        "video_thumbnail_link": card.video_thumbnail_link,
+        "selected_type": card.selected_type,
+        "best_available_resolution": card.best_available_resolution,
+        "video_platform": card.video_platform,
+        "selected_format": card.selected_format
+    }
+
+
+@app.route('/get-previous-cards')
+def get_previous_cards():
+    all_cards = get_all_cards()
+    return jsonify({"all_cards": all_cards})
+
 
 
 @app.route('/')
@@ -54,6 +101,9 @@ def index():
 
 @app.route('/submit', methods=['POST'])
 def submit():
+
+    print(f"{type(downloads)=}")
+
     start_time = time.time()
 
     selected_type = request.form.get('input-menu-type')
@@ -99,23 +149,40 @@ def submit():
             if selected_type == "audio":
                 if video_platform == "tiktok":
                     #   return jsonify({'card_id': card_id, 'should_keep': False})
-                    download_link = download_tiktok_audio(input_value, card_id, server_ip, selected_format, "audios")
+                    download_link, filepath = download_tiktok_audio(input_value, card_id, server_ip, selected_format, "audios")
                 else:
-                    download_link = download_audio(input_value, card_id, server_ip, selected_format, "audios")
+                    download_link, filepath = download_audio(input_value, card_id, server_ip, selected_format, "audios")
             else:
                 if video_platform == "tiktok":
-                    download_link = download_tiktok_video(input_value, card_id, server_ip, "videos")
+                    download_link, filepath = download_tiktok_video(input_value, card_id, server_ip, "videos")
                 else:
-                    download_link = download_youtube_video(input_value, card_id, server_ip, "videos", selected_option_resolution)
+                    download_link, filepath = download_youtube_video(input_value, card_id, server_ip, "videos", selected_option_resolution)
         except Exception as e:
             print(f"failed to download removing card\nError: {e}")
             return jsonify({'card_id': card_id, 'should_keep': False})
         print(f"{download_link=}")
+        print(f"{filepath=}")
 
         # For now, we will mock the download link
         #   download_link = "https://www.example.com"  # Replace this with real download logic
         print(f"{card_id=}")
         end_time = time.time()
+
+        add_record_to_database(
+            card_id,
+            filepath,
+            True,
+            int(round(end_time - start_time, 0)),
+            video_title,
+            input_value,
+            video_channel_name,
+            video_channel_link,
+            video_thumbnail_link,
+            selected_type,
+            best_resolution,
+            video_platform,
+            selected_format
+            )
 
         # Return the link and the card ID as JSON
         return jsonify({'card_id': card_id,
@@ -129,7 +196,7 @@ def submit():
                         "video_thumbnail_link": video_thumbnail_link,
                         "selected_type": selected_type,
                         "best_available_resolution": best_resolution,
-                        "video_platform": video_platform
+                        "video_platform": video_platform,
                         })
     except Exception as e:
         print(f"failed to download removing card\nError: {e}")
@@ -141,6 +208,7 @@ def handle_files_command():
     print("in here")
     # Clear downloadable files list
     downloads.clear()
+    delete_downloads_list()
     remove_all_records()
 
     # List all files in the folder
@@ -150,10 +218,11 @@ def handle_files_command():
     for folder in folders:
         # print(f"current: {folder=}")
         if folder == "audios" or folder == "videos":
-            print(f"kept: {folder=}")
+            #print(f"kept: {folder=}")
             kept_folders.append(folder)
         else:
-            print(f"removed: {folder=}")
+            continue
+            #   print(f"removed: {folder=}")
             #   folders.remove(folder)
 
     print(f"{kept_folders=}")
@@ -168,15 +237,44 @@ def handle_files_command():
     return Response(status=204)  # No Content
 
 
-def add_record_to_database(card_id, filepath):
+def add_record_to_database(
+        card_id: str,
+        filepath: str,
+        should_keep: bool,
+        time_taken: int,
+        video_title: str,
+        video_url: str,
+        video_channel_name: str,
+        video_channel_link: str,
+        video_thumbnail_link: str,
+        selected_type: str,
+        best_available_resolution: str,
+        video_platform: str,
+        selected_format: str
+):
     current_time = time.time()
-    record = (0, card_id, filepath, current_time)
+    record = (0, card_id, filepath, current_time, should_keep, time_taken, video_title, video_url, video_channel_name, video_channel_link, video_thumbnail_link, selected_type, best_available_resolution, video_platform, selected_format)
     newentry = ydd.Youtubedownloader.convert_from_tuple(record)
     ydsql.create_record(newentry)
 
+    # Return the link and the card ID as JSON
+    #   'card_id': card_id
+    #   'download_link': download_link
+    #   'should_keep': True
+    #   "time_taken": round(end_time - start_time, 0)
+    #   "video_title": video_title
+    #   "video_url": input_value
+    #   "video_channel_name": video_channel_name
+    #   "video_channel_link": video_channel_link
+    #   "video_thumbnail_link": video_thumbnail_link
+    #   "selected_type": selected_type
+    #   "best_available_resolution": best_resolution
+    #   "video_platform": video_platform
+
 
 def remove_all_records():
-    ydsql.deleteall()
+    print(f"deleting records")
+    ydsql.deleteall(ydd.Youtubedownloader)
 
 
 def remove_expired_records():
@@ -189,6 +287,22 @@ def remove_expired_records():
             os.remove(os.path.abspath(record.filepath))
             ydsql.delete_expired(ydd.Youtubedownloader, record.card_id)
     threading.Timer(checking_time_seconds, remove_expired_records).start()
+
+
+def save_downloads_list():
+    with open("downloads.json", "w") as file:
+        json.dump(downloads, file)
+
+def load_downloads_list():
+    with open("downloads.json", "r") as file:
+        loaded_data = json.load(file)
+    return loaded_data
+
+def delete_downloads_list():
+    with open("downloads.json", "w") as file:
+        file.truncate(0)
+    print(f"downloads file cleared")
+
 
 
 def demojize_filename(filename):
@@ -263,16 +377,14 @@ def download_youtube_video(url, card_id, server_ip, save_path=".", max_resolutio
     except Exception as e:
         print(f"failed to rename file without emojis \nERROR: {e}")
 
-    if use_automatic_removal_system:
-        add_record_to_database(card_id, full_file_path)
-
     downloads[card_id] = full_file_path
+    save_downloads_list()
     if use_user_address:
         download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
     else:
         download_link = f"http://{server_ip}/downloads/{card_id}"
     # print(download_link)
-    return download_link
+    return download_link, full_file_path
 
 
 def download_audio(url, card_id, server_ip, selected_format="mp3", save_path="."):
@@ -326,16 +438,14 @@ def download_audio(url, card_id, server_ip, selected_format="mp3", save_path="."
 
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
 
-    if use_automatic_removal_system:
-        add_record_to_database(card_id, full_file_path)
-
     downloads[card_id] = full_file_path
+    save_downloads_list()
     if use_user_address:
         download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
     else:
         download_link = f"http://{server_ip}/downloads/{card_id}"
     # print(download_link)
-    return download_link
+    return download_link, full_file_path
 
 
 
@@ -399,16 +509,14 @@ def download_tiktok_video(url, card_id, server_ip, save_path="."):
 
     final_file = demojize_filename(final_file)
 
-    if use_automatic_removal_system:
-        add_record_to_database(card_id, os.path.abspath(final_file))
-
     downloads[card_id] = os.path.abspath(final_file)
+    save_downloads_list()
     if use_user_address:
         download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
     else:
         download_link = f"http://{server_ip}/downloads/{card_id}"
     # print(download_link)
-    return download_link
+    return download_link, os.path.abspath(final_file)
 
 
 def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_path="."):
@@ -479,16 +587,14 @@ def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_p
 
     final_file = demojize_filename(final_file)
 
-    if use_automatic_removal_system:
-        add_record_to_database(card_id, os.path.abspath(final_file))
-
     downloads[card_id] = os.path.abspath(final_file)
+    save_downloads_list()
     if use_user_address:
         download_link = f"http://{ip_address}:{port}/downloads/{card_id}"
     else:
         download_link = f"http://{server_ip}/downloads/{card_id}"
     # print(download_link)
-    return download_link
+    return download_link, os.path.abspath(final_file)
 
 
 
@@ -568,7 +674,12 @@ def get_best_available_resolution(url, max_resolution="1080p"):
 
 
 if __name__ == '__main__':
+    try:
+        downloads = load_downloads_list()
+    except Exception as e:
+        print(f"could not load downloads ERROR: {e}")
     if use_automatic_removal_system:
         remove_expired_records()
-    webbrowser.open(f"http://{ip_address}:{port}")
+    if enable_automatic_browser_opening:
+        webbrowser.open(f"http://{ip_address}:{port}")
     app.run(host="0.0.0.0", port=port, debug=False)

@@ -20,6 +20,7 @@ def create_record(record):
         session.add(record)
         session.commit()
 
+
 def select_all(classparam):
     with Session(engine) as session:
         records = session.scalars(select(classparam))
@@ -29,10 +30,12 @@ def select_all(classparam):
             result.append(record)
         return result
 
+
 def get_record(classparam, record_id):
     with Session(engine) as session:
         record = session.scalars(select(classparam).where(classparam.id == record_id)).first()
     return record
+
 
 def delete_expired(classparam, record_card_id):
     with Session(engine) as session:
@@ -40,9 +43,10 @@ def delete_expired(classparam, record_card_id):
         session.execute(delete(classparam).where(classparam.card_id == record_card_id))
         session.commit()
 
-def deleteall():
+
+def deleteall(classparam):
     with Session(engine) as session:
-        session.execute(delete(Youtubedownloader))
+        session.execute(delete(classparam))
         session.commit()
 
 
@@ -62,11 +66,17 @@ if __name__ == "__main__":
     #deleteall()
     #   print(select_all(Youtubedownloader))
     all_record = select_all(Youtubedownloader)
+    print(all_record)
     for record in all_record:
         print(time.time() - record.time_created)
-        if time.time() - record.time_created > 60:
+        #   print(record)
+        if time.time() - record.time_created > 600:
             print(f"deleting: {record}")
             delete_expired(Youtubedownloader, record.card_id)
+
+    for record in all_record:
+        print(record)
+
     # print("hi :D")
 else:
     engine = create_engine(Database, echo=False, future=True)

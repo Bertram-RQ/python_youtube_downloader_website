@@ -40,11 +40,17 @@ Step 4: setup IP and Port to use (you usually won't need to change this if you'r
 
 ```python
 ip_address = "127.0.0.1"
-use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
-use_automatic_removal_system = True
-removal_time_seconds = 86400  # (86400 = 24 hours) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
-checking_time_seconds = 30 * 60  #  (30 * 60 = 30 minutes) amount of time in seconds between checks for file removal
 port = 5500
+use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
+
+use_automatic_removal_system = True  # will remove any files that exceeds the "removal_time_seconds" variable
+removal_time_seconds = 1 * 60 * 60  # (1 * 60 * 60 = 1 hour) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
+checking_time_seconds = 30 * 60  # (30 * 60 = 30 minutes) amount of time in seconds between checks for file removal
+
+allow_sync_button = True  # only if "use_automatic_removal_system" is in use
+enable_remove_files_button = True  # recommended for local use
+
+enable_automatic_browser_opening = True  # recommended for ease of use
 ```
 
 
@@ -75,6 +81,8 @@ run `py python_website.py` in cmd in the website folder (or any other terminal)
 - Supports Audio Only Download (MP3, M4A, WEBM, AAC, FLAC, OPUS, OGG, WAV)
 - Shows video name, channel name, (both with link) and thumbnail when finished Downloading
 - Automatic Removal system Configurable via Config variables
+- ability to get previously downloaded video back
+- Quite Configurable
 
 
 ## FAQ
