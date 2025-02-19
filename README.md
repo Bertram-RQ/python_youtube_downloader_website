@@ -47,8 +47,11 @@ use_automatic_removal_system = True  # will remove any files that exceeds the "r
 removal_time_seconds = 1 * 60 * 60  # (1 * 60 * 60 = 1 hour) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
 checking_time_seconds = 30 * 60  # (30 * 60 = 30 minutes) amount of time in seconds between checks for file removal
 
+max_video_length_seconds = 10 * 60 * 60  # (10 * 60 * 60 = 10 hours) video length in seconds that the downloader can handle
+
 allow_sync_button = True  # only if "use_automatic_removal_system" is in use
 enable_remove_files_button = True  # recommended for local use
+enable_debug_button = False  # don't use only for developer testing new features
 
 enable_automatic_browser_opening = True  # recommended for ease of use
 ```

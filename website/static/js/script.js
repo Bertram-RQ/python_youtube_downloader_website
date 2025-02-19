@@ -1,5 +1,6 @@
 document.getElementById("form").addEventListener("submit", async function (event) {
     /* by bertramrq: https://www.youtube.com/@BertramRQ */
+    console.log(event)
     event.preventDefault();
 
     // get type (video/audio)
@@ -133,6 +134,13 @@ document.getElementById("form").addEventListener("submit", async function (event
                 const downloadsH2 = document.getElementById("downloads")
                 downloadsH2.style.display = "none"
                 console.log(`told to not keep: ${data.card_id}`)
+                if (data.error) {
+                    console.log(`server gave this Error \n${data.error}`)
+                    addErrorCard(`${data.error}`)  // server gave this Error \n
+                } else {
+                    addErrorCard(`told to not keep: ${data.card_id}`)
+                }
+
                 return
             }
 
@@ -232,6 +240,7 @@ document.getElementById("form").addEventListener("submit", async function (event
         })
         .catch(error => {
             console.error("Error:", error);
+            addErrorCard("An error occurred while processing your request.");
         });
 
 });
@@ -317,6 +326,19 @@ document.getElementById("get-previous").addEventListener("click", async function
 
 
             allCards.forEach(async eachCard => {
+
+                const shouldKeep = eachCard.should_keep
+
+                if (shouldKeep === false) {
+                    card.remove()
+                    const downloadsH2 = document.getElementById("downloads")
+                    downloadsH2.style.display = "none"
+                    console.log(`told to not keep: ERROR: ${data.error}`)
+                    addErrorCard(`told to not keep ERROR: ${data.error}`)
+                    return
+                }
+
+
                 downloads_label.style.display = "unset"
                 downloads_label.style.marginTop = "20px"
 
@@ -412,24 +434,13 @@ document.getElementById("get-previous").addEventListener("click", async function
                 const downloadButton = card.querySelector(".download-button");
                 const downloadButtonText = card.querySelector(".button-text");
 
-                const shouldKeep = eachCard.should_keep
+
                 const videoPlatform = eachCard.video_platform
                 const videoThumnailLink = eachCard.video_thumbnail_link
                 const videoChannelLink = eachCard.video_channel_link
                 const videoChannelName = eachCard.video_channel_name
                 const videoTitle = eachCard.video_tittle
                 const timeTakenSeconds = eachCard.time_taken
-
-
-
-
-                if (shouldKeep === false) {
-                    card.remove()
-                    const downloadsH2 = document.getElementById("downloads")
-                    downloadsH2.style.display = "none"
-                    console.log(`told to not keep: ${cardId}`)
-                    return
-                }
 
                 console.log(videoPlatform)
 
@@ -527,12 +538,22 @@ document.getElementById("get-previous").addEventListener("click", async function
         })
         .catch(error => {
             console.error("Error:", error);
+            addErrorCard(`unable to get previously downloaded\nError: ${error}`)
         });
 
 
 
 
 })
+
+
+
+document.getElementById("debug-button").addEventListener("click", function (event) {
+    const inputValue = document.getElementById("input-bar").value;
+    addErrorCard(inputValue)
+})
+
+
 
 
 function removeDownloadCards() {
@@ -557,6 +578,35 @@ async function getServerIP() {
     }
 }
 
+
+
+function addErrorCard(errorMessage) {
+    const errorContainer = document.getElementById("error-container");
+
+    // Create error card
+    const errorCard = document.createElement("div");
+    errorCard.classList.add("error-card");
+    errorCard.innerHTML = `
+        <span>${errorMessage}</span>
+        <button onclick="this.parentElement.remove()">✖</button>
+    `;
+
+    // Append error card and show container
+    errorContainer.appendChild(errorCard);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (errorCard) errorCard.remove();
+    }, 10000);
+}
+
+
+
+
+
+
+
+
 window.onload = function () {
     console.log("Page and all resources are fully loaded!");
     // Your script here
@@ -567,13 +617,22 @@ window.onload = function () {
 
             if (!data.allow_sync) {
                 const getPrevious = document.getElementById("get-previous")
-                getPrevious.style.display = "none"
+                //  getPrevious.style.display = "none"
+                getPrevious.remove()
             }
 
             if (!data.enable_remove_files_button) {
                 const removeFilesButton = document.getElementById("remove-files")
-                removeFilesButton.style.display = "none"
+                //  removeFilesButton.style.display = "none"
+                removeFilesButton.remove()
             }
+
+            if (!data.enable_debug_button) {
+                const debugButton = document.getElementById("debug-button")
+                //  debugButton.style.display = "none"
+                debugButton.remove()
+            }
+
         })
         .catch(error => {
             console.error("Error:", error);

@@ -10,9 +10,11 @@
 </head>
 
 <body>
+    <div id="error-container"></div>
     <nav class="navbar">
         <span class="logo">YouTube Downloader</span>
         <div class="nav-buttons">
+            <button type="button" id="debug-button">debug-button</button>
             <button type="button" id="get-previous">get previous</button>
             <button type="button" id="remove-files">remove files</button>
             <!-- <button>About</button>
@@ -68,6 +70,7 @@
 
     <h2 id="downloads" style="display: none;">Downloads</h2>
     <div id="cards-container"></div>
+
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <!-- by bertramrq: https://www.youtube.com/@BertramRQ -->

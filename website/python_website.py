@@ -25,8 +25,11 @@ use_automatic_removal_system = True  # will remove any files that exceeds the "r
 removal_time_seconds = 1 * 60 * 60  # (1 * 60 * 60 = 1 hour) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
 checking_time_seconds = 30 * 60  # (30 * 60 = 30 minutes) amount of time in seconds between checks for file removal
 
+max_video_length_seconds = 10 * 60 * 60  # (10 * 60 * 60 = 10 hours) video length in seconds that the downloader can handle
+
 allow_sync_button = True  # only if "use_automatic_removal_system" is in use
 enable_remove_files_button = True  # recommended for local use
+enable_debug_button = False  # don't use only for developer testing new features
 
 enable_automatic_browser_opening = True  # recommended for ease of use
 # endregion CONFIG SECTION
@@ -59,7 +62,7 @@ def get_server_ip():
 
 @app.route('/server-config')
 def get_server_config():
-    return jsonify({"allow_sync": allow_sync_button, "enable_remove_files_button": enable_remove_files_button})
+    return jsonify({"allow_sync": allow_sync_button, "enable_remove_files_button": enable_remove_files_button, "enable_debug_button": enable_debug_button})
 
 
 def get_all_cards():
@@ -89,7 +92,13 @@ def convert_card_to_dict(card):
 
 @app.route('/get-previous-cards')
 def get_previous_cards():
-    all_cards = get_all_cards()
+    try:
+        all_cards = get_all_cards()
+    except Exception as e:
+        print(f"Unable to get previous cards ERROR: {e}")
+
+        return jsonify({"should_keep": False, "error": f"Unable to get previous cards"})
+
     return jsonify({"all_cards": all_cards})
 
 
@@ -119,7 +128,7 @@ def submit():
     card_id = request.form.get('card-id')  # Get the unique card ID
 
     video_platform = request.form.get('platform')
-    print(video_platform)
+    print(f"{video_platform=}")
 
     server_ip = request.form.get('server-ip')
     print(f"{server_ip=}")
@@ -128,11 +137,17 @@ def submit():
 
         if not selected_format or selected_format.lower() == "none":
             print(f"selected_format is not selected stopping")
-            return jsonify({'card_id': card_id, 'should_keep': False})
+            return jsonify({'card_id': card_id, 'should_keep': False, "error": f"format is not selected, stopped and removed card"})
 
         if is_livestream(input_value):
             print(f"{input_value} is a livestream stopping")
-            return jsonify({'card_id': card_id, 'should_keep': False})
+            return jsonify({'card_id': card_id, 'should_keep': False, "error": f"{input_value} is a livestream, stopped and removed card"})
+
+
+        if check_if_video_exceeds_max_length(input_value):
+            print(f"{input_value} is over the time limit stopping")
+            return jsonify({'card_id': card_id, 'should_keep': False, "error": f"{input_value} is over the time limit, stopped and removed card"})
+
 
         video_title = get_video_title(input_value)
         print(f"{video_title=}")
@@ -163,7 +178,7 @@ def submit():
                     download_link, filepath = download_youtube_video(input_value, card_id, server_ip, "videos", selected_option_resolution)
         except Exception as e:
             print(f"failed to download removing card\nError: {e}")
-            return jsonify({'card_id': card_id, 'should_keep': False})
+            return jsonify({'card_id': card_id, 'should_keep': False, "error": f"failed to download/get download link, removing card"})
         print(f"{download_link=}")
         print(f"{filepath=}")
 
@@ -204,7 +219,7 @@ def submit():
                         })
     except Exception as e:
         print(f"failed to download removing card\nError: {e}")
-        return jsonify({'card_id': card_id, 'should_keep': False})
+        return jsonify({'card_id': card_id, 'should_keep': False, "error": f"failed to download, removing card, this could have happened if the video is age retricted"})
 
 
 @app.route('/files', methods=['POST'])
@@ -320,7 +335,7 @@ def demojize_filename(filename):
 
     print(f"safe_filename: {type(safe_filename)}: {safe_filename}")
 
-    if os.path.exists(filename):    #and filename != safe_filename
+    if os.path.exists(filename):    # and filename != safe_filename
         #   print("in the os renamer for emojis")
         try:
             os.rename(filename, safe_filename)
@@ -328,7 +343,6 @@ def demojize_filename(filename):
             print(f"could not rename file ERROR: {e}")
         print(f"{filename} -> {safe_filename}\nFile renamed successfully!")
         return safe_filename
-
 
 
 def download_youtube_video(url, card_id, server_ip, save_path=".", max_resolution="1080p"):
@@ -688,6 +702,23 @@ def get_best_available_resolution(url, max_resolution="1080p"):
 
     # Return the highest available resolution within the limit
     return max(filtered_resolutions, key=res_to_int)
+
+
+def check_if_video_exceeds_max_length(video_url):
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'extract_flat': False  # Ensure full metadata extraction
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            info = ydl.extract_info(video_url, download=False)
+            video_duration = info.get('duration', 0)  # Duration in seconds
+            return video_duration > max_video_length_seconds
+        except Exception as e:
+            print(f"Error: {e}")
+            return None  # Return None if there's an error
 
 
 if __name__ == '__main__':
