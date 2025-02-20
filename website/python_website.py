@@ -5,6 +5,7 @@ import os
 import re
 import requests
 import subprocess
+#   from dotenv import load_dotenv
 from emoji import demojize
 
 import youtube_downloader_sql as ydsql
@@ -35,6 +36,31 @@ enable_debug_button = False  # don't use only for developer testing new features
 
 enable_automatic_browser_opening = True  # recommended for ease of use
 # endregion CONFIG SECTION
+
+
+#  below is if you wish to use a .env file to load variables
+# region CONFIG SECTION WITH ENVIRONMENT VARIABLES
+#       load_dotenv()
+#
+#       ip_address = os.getenv("IP_ADDRESS", "127.0.0.1")  # Default: 127.0.0.1
+#       port = int(os.getenv("PORT", 5500))  # Convert to int
+#
+#       use_user_address = os.getenv("USE_USER_ADDRESS", "False").lower() == "true"
+#       use_user_ids = os.getenv("USE_USER_IDS", "False").lower() == "true"
+#
+#       use_automatic_removal_system = os.getenv("USE_AUTOMATIC_REMOVAL_SYSTEM", "True").lower() == "true"
+#       removal_time_seconds = int(os.getenv("REMOVAL_TIME_SECONDS", 1 * 60 * 60))  # Convert to int
+#       checking_time_seconds = int(os.getenv("CHECKING_TIME_SECONDS", 30 * 60))  # Convert to int
+#
+#       max_video_length_seconds = int(os.getenv("MAX_VIDEO_LENGTH_SECONDS", 10 * 60 * 60))  # Convert to int
+#
+#       allow_sync_button = os.getenv("ALLOW_SYNC_BUTTON", "True").lower() == "true"
+#       enable_remove_files_button = os.getenv("ENABLE_REMOVE_FILES_BUTTON", "True").lower() == "true"
+#       enable_debug_button = os.getenv("ENABLE_DEBUG_BUTTON", "False").lower() == "true"
+#
+#       enable_automatic_browser_opening = os.getenv("ENABLE_AUTOMATIC_BROWSER_OPENING", "True").lower() == "true"
+# endregion CONFIG SECTION WITH ENVIRONMENT VARIABLES
+
 
 downloads = {}
 
