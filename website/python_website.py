@@ -178,7 +178,7 @@ def submit():
                     download_link, filepath = download_youtube_video(input_value, card_id, server_ip, "videos", selected_option_resolution)
         except Exception as e:
             print(f"failed to download removing card\nError: {e}")
-            return jsonify({'card_id': card_id, 'should_keep': False, "error": f"failed to download/get download link, removing card"})
+            return jsonify({'card_id': card_id, 'should_keep': False, "error": f"failed to download/get download link, removing card, this could happen if the resolution is too low"})
         print(f"{download_link=}")
         print(f"{filepath=}")
 

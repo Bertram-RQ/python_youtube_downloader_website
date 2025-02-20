@@ -619,18 +619,27 @@ window.onload = function () {
                 const getPrevious = document.getElementById("get-previous")
                 //  getPrevious.style.display = "none"
                 getPrevious.remove()
+            } else {
+                const getPrevious = document.getElementById("get-previous")
+                getPrevious.style.display = "unset"
             }
 
             if (!data.enable_remove_files_button) {
                 const removeFilesButton = document.getElementById("remove-files")
                 //  removeFilesButton.style.display = "none"
                 removeFilesButton.remove()
+            } else {
+                const removeFilesButton = document.getElementById("remove-files")
+                removeFilesButton.style.display = "unset"
             }
 
             if (!data.enable_debug_button) {
                 const debugButton = document.getElementById("debug-button")
                 //  debugButton.style.display = "none"
                 debugButton.remove()
+            } else {
+                const debugButton = document.getElementById("debug-button")
+                debugButton.style.display = "unset"
             }
 
         })
