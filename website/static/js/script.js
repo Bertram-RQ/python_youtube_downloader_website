@@ -1,6 +1,6 @@
 document.getElementById("form").addEventListener("submit", async function (event) {
     /* by bertramrq: https://www.youtube.com/@BertramRQ */
-    console.log(event)
+    //  console.log(event)
     event.preventDefault();
 
     // get type (video/audio)
@@ -106,6 +106,18 @@ document.getElementById("form").addEventListener("submit", async function (event
     // Add the card to the cards container
     document.getElementById("cards-container").prepend(card);
 
+    if (localStorage.getItem("user-id")) {
+        console.log("Fetching userID")
+        userID = localStorage.getItem("user-id")
+    } else {
+        console.log("Creating userID")
+        userID = `${cardId}-${Math.round(Math.random() * 100000, 0)}`
+        localStorage.setItem("user-id", userID)
+    }
+
+    console.log(`userID: ${userID}`)
+
+
     // Send the form data and unique card ID to the server via a POST request
     fetch('/submit', {
         method: 'POST',
@@ -120,7 +132,8 @@ document.getElementById("form").addEventListener("submit", async function (event
             'card-id': cardId,  // Send the card's unique ID
             'platform': platform,
             'server-ip': server_ip,
-            'selected-format': selectedFormat
+            'selected-format': selectedFormat,
+            'user-id': userID
         })
     })
         .then(response => response.json())
@@ -287,6 +300,19 @@ function toggleType() {
 document.getElementById("remove-files").addEventListener("click", function (event) {
     console.log(`pressed: ${event}`)
 
+    currentTime = Date.now()
+
+    if (localStorage.getItem("user-id")) {
+        console.log("Fetching userID")
+        userID = localStorage.getItem("user-id")
+    } else {
+        console.log("Creating userID")
+        userID = `${currentTime}-${Math.round(Math.random() * 100000, 0)}`
+        localStorage.setItem("user-id", userID)
+    }
+
+    console.log(`userID: ${userID}`)
+
     const downloadsH2 = document.getElementById("downloads")
     downloadsH2.style.display = "none"
 
@@ -299,12 +325,28 @@ document.getElementById("remove-files").addEventListener("click", function (even
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
+        body: new URLSearchParams({
+            'user-id': userID,
+        })
     })
 })
 
 
 document.getElementById("get-previous").addEventListener("click", async function (event) {
     console.log(`pressed: ${event}`)
+
+    currentTime = Date.now()
+
+    if (localStorage.getItem("user-id")) {
+        console.log("Fetching userID")
+        userID = localStorage.getItem("user-id")
+    } else {
+        console.log("Creating userID")
+        userID = `${currentTime}-${Math.round(Math.random() * 100000, 0)}`
+        localStorage.setItem("user-id", userID)
+    }
+
+    console.log(`userID: ${userID}`)
 
     removeDownloadCards()
 
@@ -313,7 +355,16 @@ document.getElementById("get-previous").addEventListener("click", async function
 
 
     // Send the form data and unique card ID to the server via a POST request
-    fetch('/get-previous-cards')
+    // Send the form data and unique card ID to the server via a POST request
+    fetch('/get-previous-cards', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'user-id': userID,
+        })
+    })
         .then(response => response.json())
         .then(async data => {
             const allCards = data.all_cards

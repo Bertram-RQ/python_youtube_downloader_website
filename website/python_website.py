@@ -21,6 +21,8 @@ ip_address = "127.0.0.1"
 port = 5500
 use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
 
+use_user_ids = False  # recommended for multiple users, this will create an id for each person and then save it with each download so only downloads from said person can be used, these ids will be saved locally to each user, this will prevent people from getting previously downloaded videos that other users downloaded and stopping them from removing files they did not download
+
 use_automatic_removal_system = True  # will remove any files that exceeds the "removal_time_seconds" variable
 removal_time_seconds = 1 * 60 * 60  # (1 * 60 * 60 = 1 hour) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
 checking_time_seconds = 30 * 60  # (30 * 60 = 30 minutes) amount of time in seconds between checks for file removal
@@ -65,8 +67,13 @@ def get_server_config():
     return jsonify({"allow_sync": allow_sync_button, "enable_remove_files_button": enable_remove_files_button, "enable_debug_button": enable_debug_button})
 
 
-def get_all_cards():
-    all_cards = ydsql.select_all(ydd.Youtubedownloader)
+def get_all_cards(user_id=None):
+    #   print(f"get_all_cards user_id: {user_id=}")
+    if use_user_ids:
+        all_cards = ydsql.user_select_all(ydd.Youtubedownloader, user_id)
+    else:
+        all_cards = ydsql.select_all(ydd.Youtubedownloader)
+    #   print(f"{all_cards=}")
     return [convert_card_to_dict(card) for card in all_cards]
 
 
@@ -74,6 +81,7 @@ def convert_card_to_dict(card):
     return {
         "id": card.id,
         "card_id": card.card_id,
+        "user_id": card.user_id,
         "filepath": card.filepath,
         "time_created": card.time_created,
         "should_keep": card.should_keep,
@@ -90,10 +98,12 @@ def convert_card_to_dict(card):
     }
 
 
-@app.route('/get-previous-cards')
+@app.route('/get-previous-cards', methods=['POST'])
 def get_previous_cards():
+    user_id = request.form.get('user-id')
+    #   print(f"get_previous user_id: {user_id}")
     try:
-        all_cards = get_all_cards()
+        all_cards = get_all_cards(user_id)
     except Exception as e:
         print(f"Unable to get previous cards ERROR: {e}")
 
@@ -114,6 +124,9 @@ def submit():
     print(f"{type(downloads)=}")
 
     start_time = time.time()
+
+    user_id = request.form.get('user-id')
+    print(f"{user_id=}")
 
     selected_type = request.form.get('input-menu-type')
     print(f"{selected_type=}")
@@ -189,6 +202,7 @@ def submit():
 
         add_record_to_database(
             card_id,
+            user_id,
             filepath,
             True,
             int(round(end_time - start_time, 0)),
@@ -204,19 +218,21 @@ def submit():
             )
 
         # Return the link and the card ID as JSON
-        return jsonify({'card_id': card_id,
-                        'download_link': download_link,
-                        'should_keep': True,
-                        "time_taken": round(end_time - start_time, 0),
-                        "video_title": video_title,
-                        "video_url": input_value,
-                        "video_channel_name": video_channel_name,
-                        "video_channel_link": video_channel_link,
-                        "video_thumbnail_link": video_thumbnail_link,
-                        "selected_type": selected_type,
-                        "best_available_resolution": best_resolution,
-                        "video_platform": video_platform,
-                        })
+        return jsonify({
+            'card_id': card_id,
+            'user_id': user_id,
+            'download_link': download_link,
+            'should_keep': True,
+            "time_taken": round(end_time - start_time, 0),
+            "video_title": video_title,
+            "video_url": input_value,
+            "video_channel_name": video_channel_name,
+            "video_channel_link": video_channel_link,
+            "video_thumbnail_link": video_thumbnail_link,
+            "selected_type": selected_type,
+            "best_available_resolution": best_resolution,
+            "video_platform": video_platform,
+        })
     except Exception as e:
         print(f"failed to download removing card\nError: {e}")
         return jsonify({'card_id': card_id, 'should_keep': False, "error": f"failed to download, removing card, this could have happened if the video is age retricted"})
@@ -224,11 +240,22 @@ def submit():
 
 @app.route('/files', methods=['POST'])
 def handle_files_command():
-    print("in here")
+    user_id = request.form.get('user-id')
+    print(f"remove_files user_id: {user_id}")
+    print("clearing files")
     # Clear downloadable files list
     downloads.clear()
     delete_downloads_list()
-    remove_all_records()
+    to_be_deleted = remove_all_records(user_id)
+
+    if use_user_ids:
+        if not to_be_deleted:
+            print("nothing to be deleted")
+            return Response(status=204)  # No Content
+        for record in to_be_deleted:
+            print(f"to be deleted: {record=}")
+            os.remove(record)
+        return Response(status=204)  # No Content
 
     # List all files in the folder
     folders = os.listdir()
@@ -237,7 +264,7 @@ def handle_files_command():
     for folder in folders:
         # print(f"current: {folder=}")
         if folder == "audios" or folder == "videos":
-            #print(f"kept: {folder=}")
+            # print(f"kept: {folder=}")
             kept_folders.append(folder)
         else:
             continue
@@ -258,6 +285,7 @@ def handle_files_command():
 
 def add_record_to_database(
         card_id: str,
+        user_id: str,
         filepath: str,
         should_keep: bool,
         time_taken: int,
@@ -272,28 +300,19 @@ def add_record_to_database(
         selected_format: str
 ):
     current_time = time.time()
-    record = (0, card_id, filepath, current_time, should_keep, time_taken, video_title, video_url, video_channel_name, video_channel_link, video_thumbnail_link, selected_type, best_available_resolution, video_platform, selected_format)
+    record = (0, card_id, user_id, filepath, current_time, should_keep, time_taken, video_title, video_url, video_channel_name, video_channel_link, video_thumbnail_link, selected_type, best_available_resolution, video_platform, selected_format)
     newentry = ydd.Youtubedownloader.convert_from_tuple(record)
     ydsql.create_record(newentry)
 
-    # Return the link and the card ID as JSON
-    #   'card_id': card_id
-    #   'download_link': download_link
-    #   'should_keep': True
-    #   "time_taken": round(end_time - start_time, 0)
-    #   "video_title": video_title
-    #   "video_url": input_value
-    #   "video_channel_name": video_channel_name
-    #   "video_channel_link": video_channel_link
-    #   "video_thumbnail_link": video_thumbnail_link
-    #   "selected_type": selected_type
-    #   "best_available_resolution": best_resolution
-    #   "video_platform": video_platform
 
-
-def remove_all_records():
+def remove_all_records(user_id=None):
     print(f"deleting records")
-    ydsql.deleteall(ydd.Youtubedownloader)
+    if use_user_ids:
+        to_be_deleted = ydsql.user_delete_all(ydd.Youtubedownloader, user_id)
+        return to_be_deleted
+    else:
+        ydsql.delete_all(ydd.Youtubedownloader)
+        return
 
 
 def remove_expired_records():
@@ -333,7 +352,7 @@ def demojize_filename(filename):
 
     safe_filename = os.path.join(drive, safe_path)
 
-    print(f"safe_filename: {type(safe_filename)}: {safe_filename}")
+    #   print(f"safe_filename: {type(safe_filename)}: {safe_filename}")
 
     if os.path.exists(filename):    # and filename != safe_filename
         #   print("in the os renamer for emojis")
@@ -515,9 +534,9 @@ def download_tiktok_video(url, card_id, server_ip, save_path="."):
         temp_file = os.path.join(save_path, f"temp_{safe_title}_{card_id}.mp4")
         final_file = os.path.join(save_path, f"final_{safe_title}_{card_id}.mp4")
 
-    print(f"{full_file_path=}")
-    print(f"{temp_file=}")
-    print(f"{final_file=}")
+    #   print(f"{full_file_path=}")
+    #   print(f"{temp_file=}")
+    #   print(f"{final_file=}")
 
     os.rename(full_file_path, temp_file)
 
@@ -565,7 +584,7 @@ def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_p
         'noplaylist': True,  # Prevent playlist downloads
     }
 
-    print(f"Downloading TikTok audio: {url}")
+    #   print(f"Downloading TikTok audio: {url}")
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(url, download=True)
@@ -576,9 +595,9 @@ def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_p
         temp_file = os.path.join(save_path, f"temp_{safe_title}_{card_id}.{selected_format}")
         final_file = os.path.join(save_path, f"final_{safe_title}_{card_id}.{selected_format}")
 
-    print(f"{full_file_path=}")
-    print(f"{temp_file=}")
-    print(f"{final_file=}")
+    #   print(f"{full_file_path=}")
+    #   print(f"{temp_file=}")
+    #   print(f"{final_file=}")
 
 
 

@@ -31,6 +31,28 @@ def select_all(classparam):
         return result
 
 
+def user_select_all(classparam, user_id):
+    #   with Session(engine) as session:
+    #       records = session.scalars(select(classparam))
+    #       #   print(records)
+    #       result = []
+    #       for record in records:
+    #           #   print(record)
+    #           if record.user_id == user_id:
+    #               print(f"added: {record}")
+    #               result.append(record)
+    #           else:
+    #               print(f"did not add: {record}")
+    #       return result
+    with Session(engine) as session:
+        records = session.scalars(select(classparam).where(classparam.user_id == user_id))
+        result = []
+        for record in records:
+            #   print(record)
+            result.append(record)
+        return result
+
+
 def get_record(classparam, record_id):
     with Session(engine) as session:
         record = session.scalars(select(classparam).where(classparam.id == record_id)).first()
@@ -44,11 +66,23 @@ def delete_expired(classparam, record_card_id):
         session.commit()
 
 
-def deleteall(classparam):
+def delete_all(classparam):
     with Session(engine) as session:
         session.execute(delete(classparam))
         session.commit()
 
+
+def user_delete_all(classparam, user_id):
+    with Session(engine) as session:
+        records = user_select_all(classparam, user_id)
+        results = []
+        for record in records:
+            results.append(record.filepath)
+
+        session.execute(delete(classparam).where(classparam.user_id == user_id))
+        session.commit()
+
+        return results
 
 
 
