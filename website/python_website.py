@@ -22,7 +22,7 @@ ip_address = "127.0.0.1"
 port = 5500
 use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
 
-use_user_ids = False  # recommended for multiple users, this will create an id for each person and then save it with each download so only downloads from said person can be used, these ids will be saved locally to each user, this will prevent people from getting previously downloaded videos that other users downloaded and stopping them from removing files they did not download
+use_user_ids = False  # recommended for multiple users, this will create an id for each person and then save it with each download so only downloads from said person can be used, these ids will be saved locally to each user, this will prevent people from getting previously downloaded videos that other users downloaded and stopping them from removing files they did not download (this is NOT secure)
 
 use_automatic_removal_system = True  # will remove any files that exceeds the "removal_time_seconds" variable
 removal_time_seconds = 1 * 60 * 60  # (1 * 60 * 60 = 1 hour) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
