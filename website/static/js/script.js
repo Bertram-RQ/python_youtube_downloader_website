@@ -71,6 +71,7 @@ document.getElementById("form").addEventListener("submit", async function (event
         <p class="card-info card-type">Type: ${selectedType}</p>
         <p class="card-info">Format: ${selectedFormat}</p>
         <button class="download-button button--loading" disabled><span class="button-text button__text">Wait...</span></button>
+        <button onclick="this.parentElement.remove()" class="remove-card-button">✖</button>
     `;
     } else {
         card.innerHTML = `
@@ -81,6 +82,7 @@ document.getElementById("form").addEventListener("submit", async function (event
         <p class="card-info">Format: ${selectedFormat}</p>
         <p class="card-info card-resolution-info">Selected Resolution: ${selectedOption}</p>
         <button class="download-button button--loading" disabled><span class="button-text button__text">Wait...</span></button>
+        <button onclick="this.parentElement.remove()" class="remove-card-button">✖</button>
     `;
     }
 
@@ -416,6 +418,7 @@ document.getElementById("get-previous").addEventListener("click", async function
                     <p class="card-info card-type">Type: ${selectedType}</p>
                     <p class="card-info">Format: ${selectedFormat}</p>
                     <button class="download-button button--loading" disabled><span class="button-text button__text">Wait...</span></button>
+                    <button onclick="this.parentElement.remove()" class="remove-card-button">✖</button>
                 `;
                 } else {
                     card.innerHTML = `
@@ -426,6 +429,7 @@ document.getElementById("get-previous").addEventListener("click", async function
                     <p class="card-info">Format: ${selectedFormat}</p>
                     <p class="card-info card-resolution-info">Selected Resolution: ${selectedOption}</p>
                     <button class="download-button button--loading" disabled><span class="button-text button__text">Wait...</span></button>
+                    <button onclick="this.parentElement.remove()" class="remove-card-button">✖</button>
                 `;
                 }
 

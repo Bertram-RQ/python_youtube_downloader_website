@@ -359,6 +359,29 @@ div.thumbnail-div {
 }
 
 
+button.remove-card-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    /* margin-top: 15px; */
+    padding: 10px;
+    background-color: transparent;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    z-index: 10000;
+    transition: all 500ms ease-out;
+}
+
+button.remove-card-button:hover {
+    background-color: hsla(0, 100%, 50%, 1);
+    transition: all 100ms ease-in;
+}
+
+
+
 .hidden {
     display: none;
 }

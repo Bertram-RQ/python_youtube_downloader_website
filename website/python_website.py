@@ -5,7 +5,7 @@ import os
 import re
 import requests
 import subprocess
-#   from dotenv import load_dotenv
+#   from dotenv import load_dotenv # use if you want environmental variable ## use "pip install dotenv"
 from emoji import demojize
 
 import youtube_downloader_sql as ydsql
