@@ -50,7 +50,7 @@ document.getElementById("form").addEventListener("submit", async function (event
     console.log(isTiktokVideo)
 
     if (!startsWithPrefix) {
-        alert(`Input URL must start with a valid prefix (${real_youtube_links[0]}, ${real_youtube_links[1]}, ${real_youtube_links[2]}).`);
+        alert(`Input URL must start with a valid prefix (${real_youtube_links[0]}, ${real_youtube_links[1]}, ${real_youtube_links[2]}, ${real_Tiktok_links[0]}, ${real_Tiktok_links[1]}, or ${real_Tiktok_links[2]}).`);
         return;
     }
 
