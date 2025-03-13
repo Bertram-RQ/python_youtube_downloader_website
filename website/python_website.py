@@ -34,6 +34,8 @@ allow_sync_button = True  # only if "use_automatic_removal_system" is in use
 enable_remove_files_button = True  # recommended for local use
 enable_debug_button = False  # don't use only for developer testing new features
 
+use_fast_converting = False  # when enabled this will not try for accuracy but just speed, i the developer recommend having this set to False as something like .ogg files to be replaced in something like a minecraft resource pack would have to be converted from ogg to ogg for it to work, when this is disabled it will make it use more computational power and take longer but have better results
+
 enable_automatic_browser_opening = True  # recommended for ease of use
 # endregion CONFIG SECTION
 
@@ -456,6 +458,8 @@ def download_audio(url, card_id, server_ip, selected_format="mp3", save_path="."
         audio_format = "m4a"
     elif selected_format.lower() == "webm":
         audio_format = "m4a"
+    elif selected_format.lower() == "aac":
+        audio_format = "m4a"
     else:
         audio_format = selected_format.lower()
 
@@ -489,15 +493,32 @@ def download_audio(url, card_id, server_ip, selected_format="mp3", save_path="."
     full_file_path = demojize_filename(full_file_path)
 
     if selected_format.lower() == "ogg":
-        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], selected_format))
-        full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+        if use_fast_converting:
+            os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], selected_format))
+            full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+        else:
+            ogg_file_path = full_file_path.replace(".m4a", ".ogg")
+            subprocess.run(["ffmpeg", "-i", full_file_path, "-c:a", "libvorbis", "-q:a", "5", ogg_file_path], check=True)
+            full_file_path = ogg_file_path  # Update the path after conversion
 
     if selected_format.lower() == "webm":
-        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], selected_format))
-        full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+        if use_fast_converting:
+            os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], selected_format))
+            full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+        else:
+            webm_file_path = full_file_path.replace(".m4a", ".webm")
+            subprocess.run(["ffmpeg", "-i", full_file_path, "-c:a", "libopus", "-b:a", "128k", webm_file_path], check=True)
+            full_file_path = webm_file_path  # Update the path after conversion
 
-    if audio_format == "aac":
-        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], audio_format))
+    if selected_format.lower() == "aac":
+        if use_fast_converting:
+            os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], audio_format))
+            full_file_path = full_file_path.replace(full_file_path.split('.')[-1], audio_format)
+        else:
+            aac_file_path = full_file_path.replace(".m4a", ".aac")
+            print(f"{aac_file_path=}")
+            subprocess.run(["ffmpeg", "-i", full_file_path, "-c:a", "aac", "-b:a", "192k", aac_file_path], check=True)
+            full_file_path = aac_file_path  # Update the path after conversion
 
     print(f"Audio saved at: {full_file_path}: {os.path.exists(full_file_path)}")
 
@@ -594,6 +615,8 @@ def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_p
         audio_format = "m4a"
     elif selected_format.lower() == "webm":
         audio_format = "m4a"
+    elif selected_format.lower() == "aac":
+        audio_format = "m4a"
     else:
         audio_format = selected_format.lower()
 
@@ -629,18 +652,32 @@ def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_p
 
 
     if selected_format.lower() == "ogg":
-        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"),
-                  full_file_path.replace(full_file_path.split('.')[-1], selected_format))
-        full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+        if use_fast_converting:
+            os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], selected_format))
+            full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+        else:
+            ogg_file_path = full_file_path.replace(".m4a", ".ogg")
+            subprocess.run(["ffmpeg", "-i", full_file_path, "-c:a", "libvorbis", "-q:a", "5", ogg_file_path], check=True)
+            full_file_path = ogg_file_path  # Update the path after conversion
 
     if selected_format.lower() == "webm":
-        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"),
-                  full_file_path.replace(full_file_path.split('.')[-1], selected_format))
-        full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+        if use_fast_converting:
+            os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], selected_format))
+            full_file_path = full_file_path.replace(full_file_path.split('.')[-1], selected_format)
+        else:
+            webm_file_path = full_file_path.replace(".m4a", ".webm")
+            subprocess.run(["ffmpeg", "-i", full_file_path, "-c:a", "libopus", "-b:a", "128k", webm_file_path], check=True)
+            full_file_path = webm_file_path  # Update the path after conversion
 
-    if audio_format == "aac":
-        os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"),
-                  full_file_path.replace(full_file_path.split('.')[-1], audio_format))
+    if selected_format.lower() == "aac":
+        if use_fast_converting:
+            os.rename(full_file_path.replace(full_file_path.split('.')[-1], "m4a"), full_file_path.replace(full_file_path.split('.')[-1], audio_format))
+            full_file_path = full_file_path.replace(full_file_path.split('.')[-1], audio_format)
+        else:
+            aac_file_path = full_file_path.replace(".m4a", ".aac")
+            print(f"{aac_file_path=}")
+            subprocess.run(["ffmpeg", "-i", full_file_path, "-c:a", "aac", "-b:a", "192k", aac_file_path], check=True)
+            full_file_path = aac_file_path  # Update the path after conversion
 
     os.rename(full_file_path, final_file)
 

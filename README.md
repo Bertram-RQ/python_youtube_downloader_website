@@ -55,6 +55,8 @@ allow_sync_button = True  # only if "use_automatic_removal_system" is in use
 enable_remove_files_button = True  # recommended for local use
 enable_debug_button = False  # don't use only for developer testing new features
 
+use_fast_converting = False  # when enabled this will not try for accuracy but just speed, i the developer recommend having this set to False as something like .ogg files to be replaced in something like a minecraft resource pack would have to be converted from ogg to ogg for it to work, when this is disabled it will make it use more computational power and take longer but have better results
+
 enable_automatic_browser_opening = True  # recommended for ease of use
 ```
 
