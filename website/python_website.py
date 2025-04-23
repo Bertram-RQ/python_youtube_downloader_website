@@ -23,6 +23,7 @@ port = 5500
 use_user_address = False  # whether or not to use the "ip_address" variable this will just get the ip that the user connected to aka the website then uses that instead of "ip_address"
 
 use_user_ids = False  # recommended for multiple users, this will create an id for each person and then save it with each download so only downloads from said person can be used, these ids will be saved locally to each user, this will prevent people from getting previously downloaded videos that other users downloaded and stopping them from removing files they did not download (this is NOT secure)
+allow_user_stats = True  # will allow a new website (<server-ip>/users) where you can see individual users and what they have downloaded previously (remove files will not clear this)
 
 use_automatic_removal_system = True  # will remove any files that exceeds the "removal_time_seconds" variable
 removal_time_seconds = 1 * 60 * 60  # (1 * 60 * 60 = 1 hour) amount of time in seconds that the file should remain when it exceeds this time it will be deleted aslong as "use_automatic_removal_system" is used
@@ -92,7 +93,7 @@ def get_server_ip():
 
 @app.route('/server-config')
 def get_server_config():
-    return jsonify({"allow_sync": allow_sync_button, "enable_remove_files_button": enable_remove_files_button, "enable_debug_button": enable_debug_button})
+    return jsonify({"allow_sync": allow_sync_button, "enable_remove_files_button": enable_remove_files_button, "enable_debug_button": enable_debug_button, "allow_user_stats": allow_user_stats})
 
 
 def get_all_cards(user_id=None):
@@ -144,6 +145,24 @@ def get_previous_cards():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/downloads')
+def download_index():
+    return render_template('downloads.html')
+
+@app.route('/users')
+def users_index():
+    records = ydsql.select_all(ydd.UserDownloadedVideos)
+    user_ids = sorted(set(record.user_id for record in records))
+    return render_template('user_stats_main.html', user_ids=user_ids)
+
+
+@app.route('/user/<user_id>')
+def user_page(user_id):
+    records = ydsql.select_all(ydd.UserDownloadedVideos)
+    user_records = [r for r in records if r.user_id == user_id]
+    return render_template('user.html', user_id=user_id, videos=user_records)
+
 
 
 @app.route('/submit', methods=['POST'])
@@ -245,6 +264,10 @@ def submit():
             selected_format
             )
 
+        if allow_user_stats:
+            record = (0, user_id, input_value, video_title)
+            ydsql.create_record(ydd.UserDownloadedVideos, record)
+
         # Return the link and the card ID as JSON
         return jsonify({
             'card_id': card_id,
@@ -329,8 +352,7 @@ def add_record_to_database(
 ):
     current_time = time.time()
     record = (0, card_id, user_id, filepath, current_time, should_keep, time_taken, video_title, video_url, video_channel_name, video_channel_link, video_thumbnail_link, selected_type, best_available_resolution, video_platform, selected_format)
-    newentry = ydd.Youtubedownloader.convert_from_tuple(record)
-    ydsql.create_record(newentry)
+    ydsql.create_record(ydd.Youtubedownloader, record)
 
 
 def remove_all_records(user_id=None):
@@ -391,6 +413,7 @@ def demojize_filename(filename):
         print(f"{filename} -> {safe_filename}\nFile renamed successfully!")
         return safe_filename
 
+# region youtube
 
 def download_youtube_video(url, card_id, server_ip, save_path=".", max_resolution="1080p"):
     # Define resolution mapping (in case user enters just numbers)
@@ -531,6 +554,7 @@ def download_audio(url, card_id, server_ip, selected_format="mp3", save_path="."
     # print(download_link)
     return download_link, full_file_path
 
+# endregion youtube
 
 
 
@@ -555,7 +579,7 @@ def convert_to_h264(input_file, output_file):
     ]
     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-
+# region tiktok
 
 def download_tiktok_video(url, card_id, server_ip, save_path="."):
     """Downloads a TikTok video in H.264 format, ensuring a valid filename."""
@@ -696,6 +720,7 @@ def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_p
     # print(download_link)
     return download_link, os.path.abspath(final_file)
 
+# endregion tiktok
 
 
 def get_video_title(url):

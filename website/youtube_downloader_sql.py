@@ -14,11 +14,19 @@ from sqlalchemy import event
 Database = "sqlite:///youtube_downloader_database.db"
 
 
-def create_record(record):
+def create_record(classparam, data_tuple):
+    """
+    Create a record using a tuple and a class with `convert_from_tuple()` method.
+
+    Example:
+        create_record(UserData, (None, "123", "[]"))
+    """
     with Session(engine) as session:
-        record.id = None
+        record = classparam.convert_from_tuple(data_tuple)
+        record.id = None  # optionally reset ID
         session.add(record)
         session.commit()
+        return record
 
 
 def select_all(classparam):
@@ -83,11 +91,6 @@ def user_delete_all(classparam, user_id):
         session.commit()
 
         return results
-
-
-
-
-
 
 
 

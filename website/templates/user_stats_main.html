@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Select a User</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_stats_main.css') }}">
+</head>
+
+<body>
+    <h1>Select a User</h1>
+    <div class="user-list">
+        {% for user_id in user_ids %}
+        <a href="/user/{{ user_id }}">{{ user_id }}</a>
+        {% endfor %}
+    </div>
+</body>
+
+</html>

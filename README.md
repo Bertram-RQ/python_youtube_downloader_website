@@ -36,6 +36,9 @@ pip install emoji
 pip install sqlalchemy
 ```
 
+> [!NOTE]
+> Add -U to the end to update the packages in case it stops working
+
 Step 4: setup IP and Port to use (you usually won't need to change this if you're running it on your own machine)
 
 ```python

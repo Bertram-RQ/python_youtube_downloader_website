@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Videos for {{ user_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_stats_main.css') }}">
+</head>
+
+<body>
+    <a href="{{ url_for('users_index') }}">&larr; Back to users</a>
+    <h1>Videos for {{ user_id }}</h1>
+    <div class="cards">
+        {% for video in videos %}
+        <div class="card">
+            <a class="card-title" href="{{ video.video_url }}" target="_blank">{{ video.video_title }}</a>
+            <p class="card-id">Video ID: {{ video.id }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+
+</html>

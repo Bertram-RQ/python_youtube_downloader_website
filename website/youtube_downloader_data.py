@@ -1,6 +1,8 @@
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column
 from sqlalchemy import String, Integer, Boolean
+import json
+import time
 
 Base = declarative_base()
 
@@ -50,3 +52,31 @@ class Youtubedownloader(Base):
             selected_format=tuple_[15]
         )
         return youtube_downloader
+
+
+class UserDownloadedVideos(Base):
+    __tablename__ = "user_downloaded_videos"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(String)
+    video_url = Column(String)
+    video_title = Column(String)
+
+    def __repr__(self):
+        return f"user_downloaded_videos: {self.id}, {self.user_id}, {self.video_url}, {self.video_title}"
+
+    def convert_to_tuple(self):
+        return (self.id, self.user_id, self.video_url, self.video_title)
+
+    def valid(self):
+        try:
+            value = int(self.id)
+        except ValueError:
+            return False
+        return value >= 0
+
+    @staticmethod
+    def convert_from_tuple(tuple_):
+        user_downloaded_videos = UserDownloadedVideos(
+            id=tuple_[0], user_id=tuple_[1], video_url=tuple_[2], video_title=tuple_[3],
+        )
+        return user_downloaded_videos

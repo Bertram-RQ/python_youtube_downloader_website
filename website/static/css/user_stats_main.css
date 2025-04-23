@@ -1,0 +1,62 @@
+/* static/style.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 20px;
+}
+
+a {
+    color: #64b5f6;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+.user-list a {
+    display: block;
+    margin: 10px 0;
+    font-size: 1.2em;
+}
+
+.cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.card {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    width: 300px;
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-title {
+    font-size: 1.3em;
+    color: #64b5f6;
+    margin-bottom: 10px;
+}
+
+.card-title:hover {
+    text-decoration: underline;
+}
+
+.card-id {
+    font-size: 0.9em;
+    color: #aaa;
+}

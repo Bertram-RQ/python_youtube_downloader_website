@@ -606,6 +606,7 @@ document.getElementById("get-previous").addEventListener("click", async function
 document.getElementById("debug-button").addEventListener("click", function (event) {
     const inputValue = document.getElementById("input-bar").value;
     addErrorCard(inputValue)
+    //  console.log("test")
 })
 
 
@@ -664,7 +665,7 @@ function addErrorCard(errorMessage) {
 
 window.onload = function () {
     console.log("Page and all resources are fully loaded!");
-    // Your script here
+    // this checks what buttons to enable
     fetch("/server-config")
         .then(response => response.json())
         .then(data => {
