@@ -19,12 +19,12 @@ document.getElementById("form").addEventListener("submit", async function (event
 
 
     // Get the values from the input bar and input menu
-    const inputValue = document.getElementById("input-bar").value;
+    var inputValue = document.getElementById("input-bar").value;
     const selectedOption = document.getElementById("input-menu-resolution").value;
     console.log(selectedOption)
 
     // Check if the input value starts with one of the allowed prefixes
-    const real_youtube_links = ["https://www.youtube.com", "https://youtube.com", "https://youtu.be"]
+    const real_youtube_links = ["https://www.youtube.com", "https://youtube.com", "https://youtu.be", "https://music.youtube.com"]
     const real_Tiktok_links = ["https://www.tiktok.com", "https://m.tiktok.com", "https://vm.tiktok.com"]
 
     // Check if the string starts with any of the prefixes in the list
@@ -53,6 +53,15 @@ document.getElementById("form").addEventListener("submit", async function (event
         alert(`Input URL must start with a valid prefix (${real_youtube_links[0]}, ${real_youtube_links[1]}, ${real_youtube_links[2]}, ${real_Tiktok_links[0]}, ${real_Tiktok_links[1]}, or ${real_Tiktok_links[2]}).`);
         return;
     }
+
+    inputValue = inputValue.split("&list=")[0];
+
+
+    if (inputValue.startsWith(real_youtube_links[3])) {
+        var convertedUrl = inputValue.replace(real_youtube_links[3], real_youtube_links[0]);
+
+        inputValue = convertedUrl;
+    };
 
     // Generate a unique ID for the card (using current timestamp)
     const cardId = Date.now();
