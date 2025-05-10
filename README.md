@@ -23,6 +23,9 @@ to start the script please run this inside the folder of the script:
 > [!NOTE]
 > You Might Need to add "**sudo**" (or equivalent) at the start to make it work
 
+> [!TIP]
+> If `./linux-start.sh` doesn't work you may need to give it proper permissions: `chmod +x linux-start.sh`
+
 ### Windows / Linux~
 
 Step 1: install [Python](https://www.python.org/downloads/)
