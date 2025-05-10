@@ -10,6 +10,21 @@ it allows you to download youtube and tiktok videos (may not work with age restr
 
 ## Installation
 
+### Linux
+
+There is a script called "**linux-start.sh**" which should download all required packages and setup a python environment and start the program (i've only tested this on arch so far but should support (**apt, bnf, pacman**) package managers)
+
+to start the script please run this inside the folder of the script:
+
+```bash
+./linux-start.sh
+```
+
+> [!NOTE]
+> You Might Need to add "**sudo**" (or equivalent) at the start to make it work
+
+### Windows / Linux~
+
 Step 1: install [Python](https://www.python.org/downloads/)
 
 > [!NOTE]
