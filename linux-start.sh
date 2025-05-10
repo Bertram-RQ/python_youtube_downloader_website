@@ -28,7 +28,7 @@ eval "$UPDATE"
 echo "==> Installing Python, pip, and FFmpeg..."
 case "$PKG" in
     apt)
-        $INSTALL python3 python3-pip ffmpeg
+        $INSTALL python3 python3-pip python-venv ffmpeg
         PYTHON=python3
         ;;
     dnf)
