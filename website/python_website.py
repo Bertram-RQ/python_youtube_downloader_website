@@ -199,31 +199,56 @@ def submit():
 
     try:
 
+        info = get_video_info(input_value)
+
         if not selected_format or selected_format.lower() == "none":
             print(f"selected_format is not selected stopping")
             return jsonify({'card_id': card_id, 'should_keep': False, "error": f"format is not selected, stopped and removed card"})
 
-        if is_livestream(input_value):
+        #   if is_livestream(input_value):
+        #       print(f"{input_value} is a livestream stopping")
+        #       return jsonify({'card_id': card_id, 'should_keep': False, "error": f"{input_value} is a livestream, stopped and removed card"})
+
+
+        #   if check_if_video_exceeds_max_length(input_value):
+        #       print(f"{input_value} is over the time limit stopping")
+        #       return jsonify({'card_id': card_id, 'should_keep': False, "error": f"{input_value} is over the time limit, stopped and removed card"})
+
+
+        if is_livestream(info):
             print(f"{input_value} is a livestream stopping")
             return jsonify({'card_id': card_id, 'should_keep': False, "error": f"{input_value} is a livestream, stopped and removed card"})
 
 
-        if check_if_video_exceeds_max_length(input_value):
+        if check_if_video_exceeds_max_length(info):
             print(f"{input_value} is over the time limit stopping")
             return jsonify({'card_id': card_id, 'should_keep': False, "error": f"{input_value} is over the time limit, stopped and removed card"})
 
 
-        video_title = get_video_title(input_value)
-        print(f"{video_title=}")
+        #   video_title = get_video_title(input_value)
+        #   print(f"{video_title=}")
 
-        video_channel_name = get_video_channel_name(input_value)
-        print(f"{video_channel_name=}")
+        #   video_channel_name = get_video_channel_name(input_value)
+        #   print(f"{video_channel_name=}")
 
-        video_channel_link = get_video_channel_link(input_value)
-        print(f"{video_channel_link=}")
+        #   video_channel_link = get_video_channel_link(input_value)
+        #   print(f"{video_channel_link=}")
 
-        video_thumbnail_link = get_video_thumbnail(input_value)
-        print(f"{video_thumbnail_link=}")
+        #   video_thumbnail_link = get_video_thumbnail(input_value)
+        #   print(f"{video_thumbnail_link=}")
+
+
+        video_title = get_video_title(info)
+        print(f"video_title={video_title}")
+
+        video_channel_name = get_video_channel_name(info)
+        print(f"video_channel_name={video_channel_name}")
+
+        video_channel_link = get_video_channel_link(info)
+        print(f"video_channel_link={video_channel_link}")
+
+        video_thumbnail_link = get_video_thumbnail(info)
+        print(f"video_thumbnail_link={video_thumbnail_link}")
 
         best_resolution = get_best_available_resolution(input_value, selected_option_resolution)
         print(f"{best_resolution=}")
@@ -727,7 +752,7 @@ def download_tiktok_audio(url, card_id, server_ip, selected_format="mp3", save_p
 # endregion tiktok
 
 
-def get_video_title(url):
+def old_get_video_title(url):
     ydl_opts = {}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
@@ -735,7 +760,7 @@ def get_video_title(url):
         return info["title"]
 
 
-def get_video_channel_name(url):
+def old_get_video_channel_name(url):
     ydl_opts = {}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
@@ -743,14 +768,14 @@ def get_video_channel_name(url):
         return info.get('channel')
 
 
-def get_video_channel_link(url):
+def old_get_video_channel_link(url):
     with yt_dlp.YoutubeDL({}) as ydl:
         info = ydl.extract_info(url, download=False)
         print(info.get('channel_url'))  # Prints the channel link
         return info.get('channel_url')
 
 
-def get_video_thumbnail(url):
+def old_get_video_thumbnail(url):
     # Create a yt-dlp object with a specific format for extracting metadata
     ydl_opts = {
         'quiet': True,  # Suppress output
@@ -767,7 +792,31 @@ def get_video_thumbnail(url):
 
 
 
-def is_livestream(url):
+def get_video_info(url):
+    ydl_opts = {'quiet': True}  # You can adjust options here
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        return ydl.extract_info(url, download=False)
+
+
+def get_video_title(info):
+    return info.get('title')
+
+
+def get_video_channel_name(info):
+    return info.get('channel')
+
+
+def get_video_channel_link(info):
+    return info.get('channel_url')
+
+
+def get_video_thumbnail(info):
+    return info.get('thumbnail')
+
+
+
+
+def old_is_livestream(url):
     ydl_opts = {
         'quiet': True,
         'extract_flat': True
@@ -815,7 +864,7 @@ def get_best_available_resolution(url, max_resolution="1080p"):
     return max(filtered_resolutions, key=res_to_int)
 
 
-def check_if_video_exceeds_max_length(video_url):
+def old_check_if_video_exceeds_max_length(video_url):
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -830,6 +879,16 @@ def check_if_video_exceeds_max_length(video_url):
         except Exception as e:
             print(f"Error: {e}")
             return None  # Return None if there's an error
+
+
+def is_livestream(info):
+    return info.get('is_live', False)
+
+
+def check_if_video_exceeds_max_length(info):
+    video_duration = info.get('duration', 0)  # Duration in seconds
+    return video_duration > max_video_length_seconds
+
 
 
 if __name__ == '__main__':
