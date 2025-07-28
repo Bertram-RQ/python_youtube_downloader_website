@@ -13,7 +13,7 @@ import youtube_downloader_data as ydd
 
 import json
 
-from flask import Flask, render_template, request, jsonify, send_file, Response
+from flask import Flask, render_template, request, jsonify, send_file, Response, send_from_directory
 import webbrowser
 
 
@@ -72,6 +72,18 @@ enable_automatic_browser_opening = True  # recommended for ease of use
 downloads = {}
 
 app = Flask(__name__)
+
+
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'favicon.ico',
+        mimetype='image/vnd.microsoft.icon'
+    )
+
 
 
 @app.route('/downloads/<unique_id>')
