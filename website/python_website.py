@@ -197,7 +197,7 @@ def download_index():
 def get_username(user_id):
     records = ydsql.select_all(ydd.UserSettings)
     user_settings_records = [r for r in records if r.user_id == user_id]
-    print(user_settings_records)
+    #   print(user_settings_records)
     username = ""
     for i in user_settings_records:
         username = str(i.username)
