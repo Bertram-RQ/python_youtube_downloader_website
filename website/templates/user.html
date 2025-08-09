@@ -9,7 +9,7 @@
 
 <body>
     <a href="{{ url_for('users_index') }}">&larr; Back to users</a>
-    <h1>Videos for {{ user_id }}</h1>
+    <h1>Videos for {{ username }} ({{ user_id }})</h1>
     <div class="cards">
         {% for video in videos %}
         <div class="card">

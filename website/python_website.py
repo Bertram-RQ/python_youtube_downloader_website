@@ -85,6 +85,33 @@ def favicon():
     )
 
 
+@app.route('/settings')
+def settings_redirect():
+    return render_template('settings_redirect.html')
+
+
+@app.route('/settings/<user_id>', methods=['GET', 'POST'])
+def settings_page(user_id):
+    with ydsql.Session(ydsql.engine) as session:
+        settings = session.query(ydd.UserSettings).filter_by(user_id=user_id).first()
+
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+
+            if settings:
+                settings.username = username
+                settings.password = password
+            else:
+                settings = ydd.UserSettings(user_id=user_id, username=username, password=password)
+                session.add(settings)
+
+            session.commit()
+            return render_template('settings.html', user_id=user_id, settings=settings, saved=True)
+
+        return render_template('settings.html', user_id=user_id, settings=settings)
+
+
 
 @app.route('/downloads/<unique_id>')
 def download_file(unique_id):
@@ -166,19 +193,41 @@ def index():
 def download_index():
     return render_template('downloads.html')
 
+
+def get_username(user_id):
+    records = ydsql.select_all(ydd.UserSettings)
+    user_settings_records = [r for r in records if r.user_id == user_id]
+    print(user_settings_records)
+    username = ""
+    for i in user_settings_records:
+        username = str(i.username)
+
+    return username
+
+
 @app.route('/users')
 def users_index():
     records = ydsql.select_all(ydd.UserDownloadedVideos)
     user_ids = sorted(set(record.user_id for record in records))
-    return render_template('user_stats_main.html', user_ids=user_ids)
+
+    usernames = [get_username(uid) for uid in user_ids]
+
+    # Combine into pairs
+    users = list(zip(user_ids, usernames))
+
+    return render_template('user_stats_main.html', users=users)
+
 
 
 @app.route('/user/<user_id>')
 def user_page(user_id):
-    records = ydsql.select_all(ydd.UserDownloadedVideos)
-    user_records = [r for r in records if r.user_id == user_id]
-    return render_template('user.html', user_id=user_id, videos=user_records)
 
+    UDV_records = ydsql.select_all(ydd.UserDownloadedVideos)
+    user_records = [r for r in UDV_records if r.user_id == user_id]
+
+    username = get_username(user_id)
+
+    return render_template('user.html', user_id=user_id, videos=user_records, username=username)
 
 
 @app.route('/submit', methods=['POST'])
@@ -306,7 +355,7 @@ def submit():
             )
 
         if allow_user_stats:
-            record = (0, user_id, input_value, video_title)
+            record = (0, user_id, input_value, video_title, "nickname_temp")
             ydsql.create_record(ydd.UserDownloadedVideos, record)
 
         # Return the link and the card ID as JSON
@@ -389,7 +438,7 @@ def add_record_to_database(
         selected_type: str,
         best_available_resolution: str,
         video_platform: str,
-        selected_format: str
+        selected_format: str,
 ):
     current_time = time.time()
     record = (0, card_id, user_id, filepath, current_time, should_keep, time_taken, video_title, video_url, video_channel_name, video_channel_link, video_thumbnail_link, selected_type, best_available_resolution, video_platform, selected_format)

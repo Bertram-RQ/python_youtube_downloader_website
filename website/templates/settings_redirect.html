@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Loading settings...</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let userID;
+            if (localStorage.getItem("user-id")) {
+                userID = localStorage.getItem("user-id");
+            } else {
+                const cardId = "guest"; // Or something relevant from your app
+                userID = `${cardId}-${Math.round(Math.random() * 100000)}`;
+                localStorage.setItem("user-id", userID);
+            }
+            window.location.href = `/settings/${userID}`;
+        });
+    </script>
+</head>
+
+<body>
+    <p>Loading your settings...</p>
+</body>
+
+</html>

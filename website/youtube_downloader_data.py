@@ -60,12 +60,13 @@ class UserDownloadedVideos(Base):
     user_id = Column(String)
     video_url = Column(String)
     video_title = Column(String)
+    username = Column(String)
 
     def __repr__(self):
-        return f"user_downloaded_videos: {self.id}, {self.user_id}, {self.video_url}, {self.video_title}"
+        return f"user_downloaded_videos: {self.id}, {self.user_id}, {self.video_url}, {self.video_title}, {self.username}"
 
     def convert_to_tuple(self):
-        return (self.id, self.user_id, self.video_url, self.video_title)
+        return (self.id, self.user_id, self.video_url, self.video_title, self.username)
 
     def valid(self):
         try:
@@ -77,6 +78,27 @@ class UserDownloadedVideos(Base):
     @staticmethod
     def convert_from_tuple(tuple_):
         user_downloaded_videos = UserDownloadedVideos(
-            id=tuple_[0], user_id=tuple_[1], video_url=tuple_[2], video_title=tuple_[3],
+            id=tuple_[0], user_id=tuple_[1], video_url=tuple_[2], video_title=tuple_[3], username=tuple_[4],
         )
         return user_downloaded_videos
+
+
+class UserSettings(Base):
+    __tablename__ = "user_settings"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(String, unique=True)
+    username = Column(String)
+    password = Column(String)  # plaintext for now, since it's just simple/local
+
+    def __repr__(self):
+        return f"UserSettings(id={self.id}, user_id={self.user_id}, username={self.username})"
+
+    def convert_to_tuple(self):
+        return (self.id, self.user_id, self.username, self.password)
+
+    @staticmethod
+    def convert_from_tuple(tuple_):
+        return UserSettings(
+            id=tuple_[0], user_id=tuple_[1],
+            username=tuple_[2], password=tuple_[3]
+        )

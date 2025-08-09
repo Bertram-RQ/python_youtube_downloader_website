@@ -10,10 +10,11 @@
 <body>
     <h1>Select a User</h1>
     <div class="user-list">
-        {% for user_id in user_ids %}
-        <a href="/user/{{ user_id }}">{{ user_id }}</a>
+        {% for user_id, username in users %}
+        <a href="/user/{{ user_id }}">{{ username }} ({{ user_id }})</a>
         {% endfor %}
     </div>
+
 </body>
 
 </html>

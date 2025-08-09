@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, select, update, delete
-from youtube_downloader_data import Youtubedownloader, Base
+from youtube_downloader_data import Youtubedownloader, UserDownloadedVideos, Base
 
 import time
 
@@ -110,6 +110,12 @@ if __name__ == "__main__":
         if time.time() - record.time_created > 600:
             print(f"deleting: {record}")
             delete_expired(Youtubedownloader, record.card_id)
+
+    for record in all_record:
+        print(record)
+
+    all_record = select_all(UserDownloadedVideos)
+    print(all_record)
 
     for record in all_record:
         print(record)

@@ -1,3 +1,5 @@
 /videos
 /youtube_downloader.py
 /website/__pycache__
+/website/youtube_downloader_backup.json
+youtube_downloader_backup.json
